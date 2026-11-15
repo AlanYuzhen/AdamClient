@@ -272,7 +272,7 @@ QVariantMap toBuffTimedVariant(quint8 buffType, int level, int maxTime, int left
 }
 
 //机器人基础id
-constexpr quint8 kRadarRobotBaseIds[] = {1, 2, 3, 4, 6, 7};
+constexpr quint8 kRadarRobotBaseIds[] = {1, 3, 4, 6, 7};
 
 //根据红蓝方和机器人基础id获取机器人id
 quint8 teamRobotId(quint8 baseId, TeamColor team) {
@@ -2620,6 +2620,33 @@ QVariantList GameData::runeGroupDeltas() const {
 }
 
 void GameData::updateGlobalUnitStatus(const robomaster::GlobalUnitStatus &data) {
+  // 2027 指挥投影独立于旧版主 HUD：R/B 前哨按固定地理身份，基地按阵营。
+  const bool blue = m_currentRobotId >= 100;
+  auto set = [this](const char *key, quint32 value) {
+    m_command2027State[QString::fromLatin1(key)] = value;
+  };
+  if (data.has_total_cp_ally()) set(blue ? "blueControlPoints" : "redControlPoints", data.total_cp_ally());
+  if (data.has_total_cp_enemy()) set(blue ? "redControlPoints" : "blueControlPoints", data.total_cp_enemy());
+  if (data.has_base_shield()) set(blue ? "blueBaseControl" : "redBaseControl", data.base_shield());
+  if (data.has_enemy_base_shield()) set(blue ? "redBaseControl" : "blueBaseControl", data.enemy_base_shield());
+  if (data.has_outpost_health()) set("rOutpostHp", data.outpost_health());
+  auto redViewStatus = [blue](quint32 value) -> quint32 {
+    return blue && value >= 1 && value <= 4 ? 5 - value : value;
+  };
+  if (data.has_outpost_status()) set("rOutpostStatus", redViewStatus(data.outpost_status()));
+  if (data.has_enemy_outpost_health()) set("bOutpostHp", data.enemy_outpost_health());
+  if (data.has_enemy_outpost_status()) set("bOutpostStatus", redViewStatus(data.enemy_outpost_status()));
+  // 血量顺序和雷达顺序不同；绝不能按长度猜阵容。
+  const int healthSlots[] = {1, 3, 4, 7};
+  QVariantMap health = m_command2027State.value("robotHealth").toMap();
+  for (int i = 0; i < qMin(8, data.robot_health_size()); ++i) {
+    const bool robotBlue = i < 4 ? blue : !blue;
+    health[QString::number(healthSlots[i % 4] + (robotBlue ? 100 : 0))] = data.robot_health(i);
+  }
+  m_command2027State["robotHealth"] = health;
+  m_command2027State["unitUpdatedMs"] = QDateTime::currentMSecsSinceEpoch();
+  emit command2027StateChanged();
+
   const bool isBluePerspective = m_currentRobotId >= 100;
   const TeamColor allyTeam =
       isBluePerspective ? TeamColor::BLUE : TeamColor::RED;
@@ -2651,11 +2678,16 @@ void GameData::updateGlobalUnitStatus(const robomaster::GlobalUnitStatus &data) 
       (data.robot_health_size() == midAllyRoster.size() ||
        data.robot_health_size() >=
            (midAllyRoster.size() + midEnemyRoster.size()));
-  const QList<int> allyRoster = useExtendedRoster
+  const bool is2027Roster = data.robot_health_size() == 8;
+  const QList<int> allyRoster = is2027Roster
+                                    ? (isBluePerspective ? QList<int>{101, 103, 104, 107} : QList<int>{1, 3, 4, 7})
+                                    : useExtendedRoster
                                     ? extendedAllyRoster
                                     : (useMidRoster ? midAllyRoster
                                                     : compactAllyRoster);
-  const QList<int> enemyRoster = useExtendedRoster
+  const QList<int> enemyRoster = is2027Roster
+                                     ? (isBluePerspective ? QList<int>{1, 3, 4, 7} : QList<int>{101, 103, 104, 107})
+                                     : useExtendedRoster
                                      ? extendedEnemyRoster
                                      : (useMidRoster ? midEnemyRoster
                                                      : compactEnemyRoster);
@@ -2844,6 +2876,8 @@ void GameData::applyOfficialGameStateSnapshot(GameStage stage,
 
   //进入新回合
   if (currentRound > 0 && m_gameState.currentRound < currentRound) {
+    m_command2027State.clear();
+    emit command2027StateChanged();
     m_gameState.lastRound = m_gameState.currentRound;
     // 结算阶段不重置战斗分数基线，避免结算时基线丢失导致无法判定胜负
     if (stage != GameStage::SETTLEMENT) {
@@ -3206,6 +3240,13 @@ void GameData::updateGlobalLogisticsStatus(
 
 void GameData::updateGlobalSpecialMechanism(
     const robomaster::GlobalSpecialMechanism &data) {
+  // 此消息是当前激活机制的完整列表；移除的机制立即清除，保留有符号计时。
+  QVariantMap mechanisms;
+  for (int i = 0; i < qMin(data.mechanism_id_size(), data.mechanism_time_sec_size()); ++i)
+    mechanisms[QString::number(data.mechanism_id(i))] = data.mechanism_time_sec(i);
+  m_command2027State["mechanisms"] = mechanisms;
+  m_command2027State["mechanismUpdatedMs"] = QDateTime::currentMSecsSinceEpoch();
+  emit command2027StateChanged();
   const int previousAllyFortressOccupationSec = m_allyFortressOccupationSec;
   const int previousEnemyFortressOccupationSec = m_enemyFortressOccupationSec;
   int nextAllyFortressOccupationSec = 0;
@@ -4017,9 +4058,9 @@ void GameData::updateRadarInfo(const robomaster::RadarInfoToClient &data) {
       (myTeam == TeamColor::RED) ? TeamColor::BLUE : TeamColor::RED;
   const QDateTime now = QDateTime::currentDateTime();
 
-  //构造12个机器人的ID
+  // 2027：敌方 1/3/4/6/7，然后己方，共 10 项
   QList<quint8> orderedRobotIds;
-  orderedRobotIds.reserve(12);
+  orderedRobotIds.reserve(10);
   for (quint8 baseId : kRadarRobotBaseIds) {
     orderedRobotIds.append(teamRobotId(baseId, enemyTeam));
   }

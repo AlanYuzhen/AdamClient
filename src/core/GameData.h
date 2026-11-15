@@ -539,6 +539,7 @@ Q_PROPERTY(int blueScore READ blueScore NOTIFY gameStateUpdated)
 Q_PROPERTY(int currentRound READ currentRound NOTIFY gameStateUpdated)
 Q_PROPERTY(int remainingTime READ getGameTime NOTIFY gameTimeUpdated)
 Q_PROPERTY(QString gamePhase READ gamePhaseString NOTIFY gameStateUpdated)
+  Q_PROPERTY(QVariantMap command2027State READ command2027State NOTIFY command2027StateChanged)
   Q_PROPERTY(bool is_paused READ is_paused NOTIFY gameStateUpdated)
 
 Q_PROPERTY(int redEconomy READ redEconomy NOTIFY economyUpdated)
@@ -716,6 +717,8 @@ public:
     if (m_currentRobotId == robotId)
       return;
     const bool teamChanged = (m_currentRobotId >= 100) != (robotId >= 100);
+    m_command2027State.clear();
+    emit command2027StateChanged();
     m_currentRobotId = robotId;
     emit myRobotUpdated();
     if (teamChanged) {
@@ -769,6 +772,7 @@ public:
   quint32 blueEncryptionLevel() const {
     return m_blueLogisticsStatus.encryptionLevel;
   }
+  QVariantMap command2027State() const { return m_command2027State; }
   int allyFortressOccupationSec() const { return m_allyFortressOccupationSec; }
   int enemyFortressOccupationSec() const { return m_enemyFortressOccupationSec; }
   int currentTeamEconomy() const {
@@ -1338,6 +1342,7 @@ signals:
 
   // 己方堡垒被对方占领计时到 1s 时触发一次提示
   void allyFortressOccupationAlertTriggered();
+  void command2027StateChanged();
 
   // 飞镖指令请求信号
   void siloCommandRequested(int targetId, bool open, bool launchConfirm);
@@ -1424,6 +1429,7 @@ private:
   // 经济数据
   int m_redEconomy = 0;
   int m_blueEconomy = 0;
+  QVariantMap m_command2027State;
   TeamLogisticsStatusData m_redLogisticsStatus;
   TeamLogisticsStatusData m_blueLogisticsStatus;
   int m_allyFortressOccupationSec = 0;//己方堡垒被对方占领倒计时

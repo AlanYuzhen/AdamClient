@@ -392,20 +392,22 @@ message GameStatus {
 }
 
 message GlobalUnitStatus {
-  uint32 base_health = 1;
-  uint32 base_status = 2;
-  uint32 base_shield = 3;
-  uint32 outpost_health = 4;
-  uint32 outpost_status = 5;
-  uint32 enemy_base_health = 6;
-  uint32 enemy_base_status = 7;
-  uint32 enemy_base_shield = 8;
-  uint32 enemy_outpost_health = 9;
-  uint32 enemy_outpost_status = 10;
+  optional uint32 base_health = 1;
+  optional uint32 base_status = 2;
+  optional uint32 base_shield = 3;
+  optional uint32 outpost_health = 4;
+  optional uint32 outpost_status = 5;
+  optional uint32 enemy_base_health = 6;
+  optional uint32 enemy_base_status = 7;
+  optional uint32 enemy_base_shield = 8;
+  optional uint32 enemy_outpost_health = 9;
+  optional uint32 enemy_outpost_status = 10;
   repeated uint32 robot_health = 11;
   repeated int32 robot_bullets = 12;
-  uint32 total_damage_ally = 13;
-  uint32 total_damage_enemy = 14;
+  optional uint32 total_damage_ally = 13;
+  optional uint32 total_damage_enemy = 14;
+  optional uint32 total_cp_ally = 15; // 2027 累计控制点
+  optional uint32 total_cp_enemy = 16;
 }
 
 message GlobalLogisticsStatus {

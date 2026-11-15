@@ -61,12 +61,10 @@ Rectangle {
     readonly property int enemyScore: root.allyIsRed
         ? Number(root.header.blueScore || 0)
         : Number(root.header.redScore || 0)
-    readonly property string layoutShortcut: "Ctrl+Y Layout"
+    readonly property string layoutShortcut: "Ctrl+Y 地图 / 控制态势"
     readonly property string layoutMode: root.dataSource.layoutMode || mockData.layoutMode || "map_primary"
-    readonly property var allyRobotsForMap: (root.dataSource.allyRobotList
-        && root.dataSource.allyRobotList.length > 0) ? root.dataSource.allyRobotList : mockData.allyRobotList
-    readonly property var enemyRobotsForMap: (root.dataSource.enemyRobotList
-        && root.dataSource.enemyRobotList.length > 0) ? root.dataSource.enemyRobotList : mockData.enemyRobotList
+    readonly property var allyRobotsForMap: root.dataSource.allyRobotList || []
+    readonly property var enemyRobotsForMap: root.dataSource.enemyRobotList || []
     readonly property var tacticalMapModel: root.dataSource.mapData
         || root.dataSource.radarData || mockData.radarData
     readonly property bool largeMapMode: root.mainWindowContext
@@ -77,52 +75,12 @@ Rectangle {
         && tacticalLargeMapLoader.visible
     property string selectedRobotId: ""
     property string selectedEnemyId: ""
-    // 工业相机帧独立于 100 ms 战术快照刷新；仅在指挥屏显示时启用，
-    // 避免隐藏页面仍持续拉取 image provider。
+    // 保留主窗口设置入口；指挥屏不再请求工业相机帧。
     property bool cameraRefreshEnabled: false
     property bool heroCameraGridVisible: false
-    property real heroCameraFps: 0
-    property real heroCameraLastRevision: 0
-    property bool heroCameraFpsInitialized: false
-    readonly property bool liveCameraSourceAllowed: root.cameraRefreshEnabled
-        && !root.largeMapMode
-        && !(root.tacticalAnalyzerContext
-             ? Boolean(root.tacticalAnalyzerContext.useMockData) : false)
-    readonly property bool hasHeroCameraFrame: root.liveCameraSourceAllowed
-        && root.gameDataContext
-        && Boolean(root.gameDataContext.hasHeroFrame)
-    readonly property string heroCameraFrameSource: root.hasHeroCameraFrame
-        ? String(root.gameDataContext.heroFrameSource) : ""
-
-    function resetHeroCameraFpsMeter() {
-        root.heroCameraFps = 0
-        root.heroCameraLastRevision = 0
-        root.heroCameraFpsInitialized = false
-    }
-
-    function sampleHeroCameraFps() {
-        if (!root.hasHeroCameraFrame) {
-            root.resetHeroCameraFpsMeter()
-            return
-        }
-        var revision = Number(root.gameDataContext.heroFrameRevision)
-        if (root.heroCameraFpsInitialized) {
-            root.heroCameraFps = Math.max(0, revision - root.heroCameraLastRevision)
-        } else {
-            root.heroCameraFpsInitialized = true
-            root.heroCameraFps = 0
-        }
-        root.heroCameraLastRevision = revision
-    }
-
-    onLiveCameraSourceAllowedChanged: resetHeroCameraFpsMeter()
-
-    Timer {
-        interval: 1000
-        repeat: true
-        running: root.liveCameraSourceAllowed
-        onTriggered: root.sampleHeroCameraFps()
-    }
+    readonly property var controlState: root.gameDataContext
+        && root.gameDataContext.command2027State !== undefined
+        ? root.gameDataContext.command2027State : ({})
 
     function selectRobot(robotId, isEnemy) {
         if (isEnemy) {
@@ -289,21 +247,15 @@ Rectangle {
             pageRoot: root
         }
 
-        CameraPreviewPanel {
-            objectName: "tacticalCenterCamera"
+        TerritoryStatusPanel {
+            objectName: "tacticalCenterControl"
             x: root.layoutRect("center").x
             y: root.layoutRect("center").y
             width: root.layoutRect("center").w
             height: root.layoutRect("center").h
             visible: root.videoPrimary && !root.largeMapMode
-            centralMode: true
-            showRealVideo: root.videoPrimary && !root.largeMapMode
-            showGrid: root.heroCameraGridVisible
-            liveFrameSource: root.heroCameraFrameSource
-            liveFps: root.hasHeroCameraFrame ? root.heroCameraFps : -1
-            status: root.dataSource.cameraPreviewData || mockData.cameraPreviewData
-            gameActive: root.gameDataContext
-                && root.gameDataContext.gamePhase !== "未开始"
+            controlData: root.controlState
+            allyIsBlue: root.allyIsBlue
         }
 
         BattleEventPanel {
@@ -323,20 +275,15 @@ Rectangle {
             decision: root.dataSource.mainDecision || mockData.mainDecision
         }
 
-        CameraPreviewPanel {
-            objectName: "tacticalAuxCamera"
+        TerritoryStatusPanel {
+            objectName: "tacticalAuxControl"
             x: root.layoutRect("aux").x
             y: root.layoutRect("aux").y
             width: root.layoutRect("aux").w
             height: root.layoutRect("aux").h
             visible: !root.videoPrimary && !root.largeMapMode
-            showRealVideo: !root.videoPrimary && !root.largeMapMode
-            showGrid: root.heroCameraGridVisible
-            liveFrameSource: root.heroCameraFrameSource
-            liveFps: root.hasHeroCameraFrame ? root.heroCameraFps : -1
-            status: root.dataSource.cameraPreviewData || mockData.cameraPreviewData
-            gameActive: root.gameDataContext
-                && root.gameDataContext.gamePhase !== "未开始"
+            controlData: root.controlState
+            allyIsBlue: root.allyIsBlue
         }
 
         TacticalRadarMap {
@@ -391,7 +338,6 @@ Rectangle {
             Repeater {
                 model: [
                     { name: "DATA", value: (root.linkHealth.mqttLatencyMs || "--") + "ms", ok: true },
-                    { name: "CAM", value: root.linkHealth.videoStatus === "ok" ? "LIVE" : "WAIT", ok: root.linkHealth.videoStatus === "ok" },
                     { name: "MAP", value: (root.linkHealth.radarAgeMs || "--") + "ms", ok: root.linkHealth.radarStatus === "ok" }
                 ]
 
@@ -563,44 +509,32 @@ Rectangle {
         }
     }
 
-    BaseHealthWing {
+    ControlPointsWing {
         id: allyWing
+        objectName: "allyControlPointsWing"
         anchors.right: centerInfo.left
         anchors.rightMargin: Math.round(10 * root.topHudScaleX)
         y: Math.round(4 * root.topHudScaleY)
         width: root.topHudWingWidth
         height: root.topHudWingHeight
         z: 2
-        enemy: false
         isBlueTeam: root.allyIsBlue
         teamName: root.allyTeamName
-        hp: root.resources.allyBaseHp || 0
-        maxHp: root.resources.allyBaseMax || 5000
-        outpostHp: root.resources.allyOutpostHp || 0
-        outpostMax: root.resources.allyOutpostMax || 1500
-        outpostDestroyed: root.resources.allyOutpostDestroyed || false
-        invincible: root.resources.allyBaseInvincible || false
-        defenseBonus: root.resources.allyDefenseBonus || 0
+        controlState: root.controlState
     }
 
-    BaseHealthWing {
+    ControlPointsWing {
         id: enemyWing
+        objectName: "enemyControlPointsWing"
         anchors.left: centerInfo.right
         anchors.leftMargin: Math.round(10 * root.topHudScaleX)
         y: Math.round(4 * root.topHudScaleY)
         width: root.topHudWingWidth
         height: root.topHudWingHeight
         z: 2
-        enemy: true
         isBlueTeam: root.enemyIsBlue
         teamName: root.enemyTeamName
-        hp: root.resources.enemyBaseHp || 0
-        maxHp: root.resources.enemyBaseMax || 5000
-        outpostHp: root.resources.enemyOutpostHp || 0
-        outpostMax: root.resources.enemyOutpostMax || 1500
-        outpostDestroyed: root.resources.enemyOutpostDestroyed || false
-        invincible: root.resources.enemyBaseInvincible || false
-        defenseBonus: root.resources.enemyDefenseBonus || 0
+        controlState: root.controlState
     }
 
     TopLogisticsStrip {
@@ -611,6 +545,7 @@ Rectangle {
         height: root.topHudLogisticsHeight
         z: 2
         model: root.topStatus
+        controlState: root.controlState
         allyIsBlue: root.allyIsBlue
         enemyIsBlue: root.enemyIsBlue
     }

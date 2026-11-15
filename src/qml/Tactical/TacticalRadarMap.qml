@@ -60,7 +60,7 @@ Rectangle {
     readonly property color selfRobotStrokeColor: "#9BFFBE"
     readonly property color selfRobotLabelColor: "#EFFFF4"
     function robotNumberText(robot) {
-        var number = Number(robot && robot.number !== undefined ? robot.number : 0)
+        var number = Number(robot ? (robot.number || robot.slot || String(robot.id || "").slice(1)) : 0)
         return number > 0 ? number.toString() : ""
     }
 
@@ -112,7 +112,8 @@ Rectangle {
     function transformRobots(robots) {
         var transformed = []
         for (var i = 0; i < robots.length; ++i)
-            transformed.push(root.transformRobot(robots[i]))
+            if (Number(robots[i].number || robots[i].slot || String(robots[i].id || "").slice(1)) !== 2)
+                transformed.push(root.transformRobot(robots[i]))
         return transformed
     }
 
@@ -175,7 +176,8 @@ Rectangle {
     function isSelfRobot(robot) {
         if (!robot)
             return false
-        return Number(robot.number || 0) === root.currentRobotNumber
+        return root.currentRobotNumber > 0
+            && Number(robot.number || robot.slot || String(robot.id || "").slice(1)) === root.currentRobotNumber
     }
 
     function normalizedRobotScreenY(robot) {
@@ -201,6 +203,7 @@ Rectangle {
         for (var j = 0; j < positionRobots.length; ++j) {
             var positionedRobot = positionRobots[j]
             var robotId = String(positionedRobot.id || "")
+            if (Number(positionedRobot.number || robotId.slice(1)) === 2) continue
             var mergedRobot = {}
             for (var key in positionedRobot) {
                 mergedRobot[key] = positionedRobot[key]
@@ -222,7 +225,7 @@ Rectangle {
     Text {
         anchors.left: parent.left; anchors.leftMargin: 6 * root.visualScale
         anchors.top: parent.top; anchors.topMargin: 4 * root.visualScale
-        text: "战术地图"; color: "#8899AA"; font.pixelSize: 10 * root.visualScale; font.bold: true
+        text: "2027 战术地图 · 1 重型工程 / 3、4 步兵 / 6 无人机 / 7 哨兵"; color: "#8899AA"; font.pixelSize: 10 * root.visualScale; font.bold: true
     }
 
     // 雷达数据更新时间
@@ -241,10 +244,24 @@ Rectangle {
         }
     }
 
+    Rectangle {
+        anchors.left: parent.left; anchors.right: parent.right
+        y: 24 * root.visualScale
+        height: 22 * root.visualScale
+        color: "#102331"
+        readonly property var control: root.pageRoot ? root.pageRoot.controlState : ({})
+        Text {
+            anchors.centerIn: parent
+            text: "控制点  红方 " + (parent.control.redControlPoints !== undefined ? parent.control.redControlPoints : "--")
+                + "  :  " + (parent.control.blueControlPoints !== undefined ? parent.control.blueControlPoints : "--") + " 蓝方"
+            color: "#ffe097"; font.bold: true; font.pixelSize: 12 * root.visualScale
+        }
+    }
+
     // 地图区域
     Rectangle {
         id: mapArea
-        anchors.top: parent.top; anchors.topMargin: 24 * root.visualScale
+        anchors.top: parent.top; anchors.topMargin: 48 * root.visualScale
         anchors.left: parent.left; anchors.leftMargin: 4 * root.visualScale
         anchors.right: parent.right; anchors.rightMargin: 4 * root.visualScale
         anchors.bottom: parent.bottom; anchors.bottomMargin: 4 * root.visualScale

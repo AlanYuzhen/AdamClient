@@ -6,6 +6,7 @@ Item {
     id: root
 
     property var model: ({})
+    property var controlState: ({})
     property bool allyIsBlue: false
     property bool enemyIsBlue: true
     readonly property real uiScale: Math.max(1.0, height / 62)
@@ -136,7 +137,7 @@ Item {
 
                     Text {
                         width: parent.width
-                        text: "己方堡垒被对方占领计时"
+                        text: "红方累计控制点"
                         color: "#dff6ff"
                         font.pixelSize: Math.round(11 * root.uiScale)
                         font.bold: true
@@ -145,8 +146,8 @@ Item {
 
                     Text {
                         width: parent.width
-                        text: String(Number(root.model.allyFortressOccupationSec || 0)) + "s"
-                        color: root.mutedText(root.allyAccent)
+                        text: root.controlState.redControlPoints !== undefined ? String(root.controlState.redControlPoints) : "--"
+                        color: "#ff7382"
                         font.pixelSize: Math.round(18 * root.uiScale)
                         font.bold: true
                         horizontalAlignment: Text.AlignHCenter
@@ -169,7 +170,7 @@ Item {
 
                     Text {
                         width: parent.width
-                        text: "敌方堡垒被己方占领计时"
+                        text: "蓝方累计控制点"
                         color: "#dff6ff"
                         font.pixelSize: Math.round(11 * root.uiScale)
                         font.bold: true
@@ -178,8 +179,8 @@ Item {
 
                     Text {
                         width: parent.width
-                        text: String(Number(root.model.enemyFortressOccupationSec || 0)) + "s"
-                        color: root.mutedText(root.enemyAccent)
+                        text: root.controlState.blueControlPoints !== undefined ? String(root.controlState.blueControlPoints) : "--"
+                        color: "#65c9ff"
                         font.pixelSize: Math.round(18 * root.uiScale)
                         font.bold: true
                         horizontalAlignment: Text.AlignHCenter
@@ -230,7 +231,7 @@ Item {
 
         Text {
             anchors.centerIn: parent
-            text: "堡垒状态"
+            text: "控制点积分"
             color: "#f4fbff"
             font.pixelSize: Math.round(10 * root.uiScale)
             font.bold: true

@@ -504,7 +504,7 @@ private slots:
     gameData.setCurrentRobotId(1);
 
     robomaster::RadarInfoToClient packetFromRedPerspective;
-    for (int i = 0; i < 12; ++i) {
+    for (int i = 0; i < 10; ++i) {
       auto *info = packetFromRedPerspective.add_robot_info();
       info->set_target_pos_x(static_cast<uint32_t>((i + 1) * 100));
       info->set_target_pos_y(static_cast<uint32_t>((i + 1) * 200));
@@ -522,23 +522,23 @@ private slots:
     QVERIFY(blueHero != nullptr);
     QVERIFY(blueSentry != nullptr);
 
-    // V2.0.0 固定按对方 1/2/3/4/6/7、己方 1/2/3/4/6/7 排列。
-    QCOMPARE(redHero->posX, 7.0f);
-    QCOMPARE(redHero->posY, 14.0f);
-    QCOMPARE(redHero->isHighLight, quint8(0));
-    QCOMPARE(redSentry->posX, 12.0f);
-    QCOMPARE(redSentry->posY, 24.0f);
+    // 2027 固定按对方 1/3/4/6/7、己方 1/3/4/6/7 排列。
+    QCOMPARE(redHero->posX, 6.0f);
+    QCOMPARE(redHero->posY, 12.0f);
+    QCOMPARE(redHero->isHighLight, quint8(1));
+    QCOMPARE(redSentry->posX, 10.0f);
+    QCOMPARE(redSentry->posY, 20.0f);
     QCOMPARE(redSentry->isHighLight, quint8(1));
     QCOMPARE(blueHero->posX, 1.0f);
     QCOMPARE(blueHero->posY, 2.0f);
     QCOMPARE(blueHero->isHighLight, quint8(0));
-    QCOMPARE(blueSentry->posX, 6.0f);
-    QCOMPARE(blueSentry->posY, 12.0f);
-    QCOMPARE(blueSentry->isHighLight, quint8(1));
+    QCOMPARE(blueSentry->posX, 5.0f);
+    QCOMPARE(blueSentry->posY, 10.0f);
+    QCOMPARE(blueSentry->isHighLight, quint8(0));
 
     gameData.setCurrentRobotId(101);
     robomaster::RadarInfoToClient packetFromBluePerspective;
-    for (int i = 0; i < 12; ++i) {
+    for (int i = 0; i < 10; ++i) {
       auto *info = packetFromBluePerspective.add_robot_info();
       info->set_target_pos_x(static_cast<uint32_t>((i + 1) * 150));
       info->set_target_pos_y(static_cast<uint32_t>((i + 1) * 250));
@@ -550,14 +550,14 @@ private slots:
     QCOMPARE(redHero->posX, 1.5f);
     QCOMPARE(redHero->posY, 2.5f);
     QCOMPARE(redHero->isHighLight, quint8(1));
-    QCOMPARE(redSentry->posX, 9.0f);
-    QCOMPARE(redSentry->posY, 15.0f);
-    QCOMPARE(redSentry->isHighLight, quint8(0));
-    QCOMPARE(blueHero->posX, 10.5f);
-    QCOMPARE(blueHero->posY, 17.5f);
-    QCOMPARE(blueHero->isHighLight, quint8(1));
-    QCOMPARE(blueSentry->posX, 18.0f);
-    QCOMPARE(blueSentry->posY, 30.0f);
+    QCOMPARE(redSentry->posX, 7.5f);
+    QCOMPARE(redSentry->posY, 12.5f);
+    QCOMPARE(redSentry->isHighLight, quint8(1));
+    QCOMPARE(blueHero->posX, 9.0f);
+    QCOMPARE(blueHero->posY, 15.0f);
+    QCOMPARE(blueHero->isHighLight, quint8(0));
+    QCOMPARE(blueSentry->posX, 15.0f);
+    QCOMPARE(blueSentry->posY, 25.0f);
     QCOMPARE(blueSentry->isHighLight, quint8(0));
   }
 

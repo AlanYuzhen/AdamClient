@@ -4,6 +4,7 @@
 #include <QQmlContext>
 #include <QQmlEngine>
 #include <QQuickItem>
+#include <QQuickWindow>
 #include <QtTest>
 
 class TacticalMainWindowStub : public QObject {
@@ -33,6 +34,7 @@ class TacticalGameDataStub : public QObject {
   Q_OBJECT
   Q_PROPERTY(int currentRobotId READ currentRobotId WRITE setCurrentRobotId NOTIFY
                  currentRobotIdChanged)
+  Q_PROPERTY(QVariantMap command2027State READ command2027State NOTIFY command2027StateChanged)
   Q_PROPERTY(bool hasHeroFrame READ hasHeroFrame NOTIFY heroFrameUpdated)
   Q_PROPERTY(quint64 heroFrameRevision READ heroFrameRevision NOTIFY
                  heroFrameUpdated)
@@ -40,6 +42,12 @@ class TacticalGameDataStub : public QObject {
                  heroFrameUpdated)
 
 public:
+  QVariantMap command2027State() const { return m_commandState; }
+  void publishControlPoints(int red, int blue) {
+    m_commandState = {{"redControlPoints", red}, {"blueControlPoints", blue},
+                     {"unitUpdatedMs", QDateTime::currentMSecsSinceEpoch()}};
+    emit command2027StateChanged();
+  }
   int currentRobotId() const { return m_currentRobotId; }
   bool hasHeroFrame() const { return m_hasHeroFrame; }
   quint64 heroFrameRevision() const { return m_heroFrameRevision; }
@@ -66,9 +74,11 @@ public:
 
 signals:
   void currentRobotIdChanged();
+  void command2027StateChanged();
   void heroFrameUpdated();
 
 private:
+  QVariantMap m_commandState;
   int m_currentRobotId = 1;
   bool m_hasHeroFrame = false;
   quint64 m_heroFrameRevision = 0;
@@ -301,64 +311,93 @@ private slots:
     QVERIFY(!missAtRedPerspectivePosition.toBool());
   }
 
-  void testCameraRefreshUsesHeroFrameRevisionDirectly() {
+  void testCommandHeaderUsesLiveControlPoints() {
     QQmlEngine engine;
-    TacticalMainWindowStub mainWindow;
-    TacticalGameDataStub gameData;
-    engine.rootContext()->setContextProperty(QStringLiteral("mainWindow"),
-                                             &mainWindow);
-    engine.rootContext()->setContextProperty(QStringLiteral("gameData"),
-                                             &gameData);
-
-    QQmlComponent component(
-        &engine,
-        QUrl(QStringLiteral("qrc:/qml/Tactical/TacticalCommandPage.qml")));
+    TacticalGameDataStub data;
+    engine.rootContext()->setContextProperty(QStringLiteral("gameData"), &data);
+    QQmlComponent component(&engine, QUrl(QStringLiteral("qrc:/qml/Tactical/TacticalCommandPage.qml")));
     QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+    QScopedPointer<QObject> page(component.create());
+    QVERIFY2(page, qPrintable(component.errorString()));
+    auto *ally = page->findChild<QObject *>(QStringLiteral("allyControlPointsWing"));
+    auto *enemy = page->findChild<QObject *>(QStringLiteral("enemyControlPointsWing"));
+    QVERIFY(ally); QVERIFY(enemy);
+    QCOMPARE(ally->property("pointsText").toString(), QStringLiteral("--"));
+    data.publishControlPoints(120, 80);
+    QTRY_COMPARE(ally->property("pointsText").toString(), QStringLiteral("120"));
+    QCOMPARE(enemy->property("pointsText").toString(), QStringLiteral("80"));
+    data.publishControlPoints(0, 95);
+    QTRY_COMPARE(ally->property("pointsText").toString(), QStringLiteral("0"));
+    data.setCurrentRobotId(101);
+    QTRY_COMPARE(ally->property("pointsText").toString(), QStringLiteral("95"));
+    QCOMPARE(enemy->property("pointsText").toString(), QStringLiteral("0"));
+    auto *source = page->property("dataSource").value<QObject *>();
+    QVERIFY(source);
+    source->setProperty("layoutMode", QStringLiteral("video_primary"));
+    QTRY_VERIFY(page->property("videoPrimary").toBool());
+    data.publishControlPoints(7, 11);
+    QTRY_COMPARE(ally->property("pointsText").toString(), QStringLiteral("11"));
+    QCOMPARE(enemy->property("pointsText").toString(), QStringLiteral("7"));
+  }
 
-    QScopedPointer<QObject> pageObject(component.create());
-    QVERIFY2(pageObject, qPrintable(component.errorString()));
-    QObject *page = pageObject.data();
-
-    gameData.publishHeroFrame();
-    QCOMPARE(page->property("heroCameraFrameSource").toString(), QString());
-
-    QVERIFY(page->setProperty("cameraRefreshEnabled", true));
-    QTRY_COMPARE(page->property("heroCameraFrameSource").toString(),
-                 gameData.heroFrameSource());
-
-    QVERIFY(QMetaObject::invokeMethod(page, "sampleHeroCameraFps"));
-    for (int i = 0; i < 7; ++i) {
-      gameData.publishHeroFrame();
+  void testControlLayoutRendering() {
+    QQmlEngine engine;
+    QQmlComponent component(&engine, QUrl(QStringLiteral("qrc:/qml/Tactical/TacticalCommandPage.qml")));
+    QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+    QScopedPointer<QObject> object(component.create());
+    QVERIFY2(object, qPrintable(component.errorString()));
+    auto *page = qobject_cast<QQuickItem *>(object.data());
+    QVERIFY(page);
+    QQuickWindow window;
+    window.resize(1920, 1080);
+    page->setParentItem(window.contentItem());
+    page->setSize(window.size());
+    QVariantMap controls{{"redControlPoints", 120}, {"blueControlPoints", 80},
+       {"rOutpostHp", 1000}, {"bOutpostHp", 800}, {"rOutpostStatus", 1}, {"bOutpostStatus", 3},
+       {"redBaseControl", 1}, {"blueBaseControl", 2}, {"unitUpdatedMs", QDateTime::currentMSecsSinceEpoch()},
+       {"mechanismUpdatedMs", QDateTime::currentMSecsSinceEpoch()}, {"mechanisms", QVariantMap{{"3", -9}, {"6", 6}}}};
+    // controlState is readonly; feed the rendering fixture through each panel instead.
+    for (const QString &name : {QStringLiteral("tacticalAuxControl"), QStringLiteral("tacticalCenterControl")}) {
+      auto *panel = page->findChild<QQuickItem *>(name);
+      QVERIFY(panel);
+      panel->setProperty("controlData", controls);
+      QVERIFY(panel->height() > 240);
     }
-    QVERIFY(QMetaObject::invokeMethod(page, "sampleHeroCameraFps"));
-    QCOMPARE(page->property("heroCameraFps").toReal(), 7.0);
+    window.show();
+    QTest::qWait(200);
+    const QString capture = qEnvironmentVariable("RM_COMMAND_CAPTURE");
+    if (!capture.isEmpty()) QVERIFY(window.grabWindow().save(capture));
+  }
 
-    QObject *camera =
-        page->findChild<QObject *>(QStringLiteral("tacticalAuxCamera"));
-    QVERIFY(camera);
-    QTRY_COMPARE(camera->property("liveFrameSource").toString(),
-                 gameData.heroFrameSource());
-    QCOMPARE(camera->property("liveFps").toReal(), 7.0);
-    QCOMPARE(camera->property("showGrid").toBool(), false);
+  void testControlPanelsReplaceIndustrialCamera() {
+    QQmlEngine engine;
+    QQmlComponent component(&engine, QUrl(QStringLiteral("qrc:/qml/Tactical/TacticalCommandPage.qml")));
+    QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+    QScopedPointer<QObject> page(component.create());
+    QVERIFY2(page, qPrintable(component.errorString()));
+    QVERIFY(!page->findChild<QObject *>(QStringLiteral("tacticalAuxCamera")));
+    QVERIFY(!page->findChild<QObject *>(QStringLiteral("tacticalCenterCamera")));
+    QObject *panel = page->findChild<QObject *>(QStringLiteral("tacticalAuxControl"));
+    QVERIFY(panel);
+    QVERIFY(panel->property("visible").toBool());
+    QVERIFY(panel->setProperty("controlData", QVariantMap{{"redControlPoints", 120}, {"blueControlPoints", 80}}));
+    QVariant redPoints, bluePoints;
+    QVERIFY(QMetaObject::invokeMethod(panel, "points", Q_RETURN_ARG(QVariant, redPoints), Q_ARG(QVariant, false)));
+    QVERIFY(QMetaObject::invokeMethod(panel, "points", Q_RETURN_ARG(QVariant, bluePoints), Q_ARG(QVariant, true)));
+    QCOMPARE(redPoints.toString(), QStringLiteral("120"));
+    QCOMPARE(bluePoints.toString(), QStringLiteral("80"));
+    QObject *source = page->property("dataSource").value<QObject *>();
+    QVERIFY(source);
+    QVERIFY(source->setProperty("layoutMode", QStringLiteral("video_primary")));
+    QTRY_VERIFY(page->property("videoPrimary").toBool());
+    QVERIFY(!panel->property("visible").toBool());
+    QObject *center = page->findChild<QObject *>(QStringLiteral("tacticalCenterControl"));
+    QVERIFY(center);
+    QTRY_VERIFY(center->property("visible").toBool());
+    QVERIFY(page->findChild<QObject *>(QStringLiteral("tacticalAuxMap"))->property("visible").toBool());
 
-    mainWindow.setTacticalLargeMapMode(true);
-    QTRY_COMPARE(page->property("heroCameraFrameSource").toString(), QString());
-    QTRY_COMPARE(camera->property("liveFrameSource").toString(), QString());
-    QTRY_VERIFY(!camera->property("visible").toBool());
-    mainWindow.setTacticalLargeMapMode(false);
-    QTRY_COMPARE(camera->property("liveFrameSource").toString(),
-                 gameData.heroFrameSource());
-    QTRY_VERIFY(camera->property("visible").toBool());
-    QVERIFY(QMetaObject::invokeMethod(page, "sampleHeroCameraFps"));
-    QCOMPARE(page->property("heroCameraFps").toReal(), 0.0);
-    for (int i = 0; i < 3; ++i) {
-      gameData.publishHeroFrame();
-    }
-    QVERIFY(QMetaObject::invokeMethod(page, "sampleHeroCameraFps"));
-    QCOMPARE(page->property("heroCameraFps").toReal(), 3.0);
-
-    QVERIFY(page->setProperty("heroCameraGridVisible", true));
-    QTRY_VERIFY(camera->property("showGrid").toBool());
+    for (const QVariant &entry : page->property("allyRobotsForMap").value<QJSValue>().toVariant().toList())
+      QVERIFY(entry.toMap().value("slot").toInt() != 2);
   }
 };
 

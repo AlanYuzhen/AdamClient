@@ -58,6 +58,8 @@
         <file>Tactical/components/BattleEventPanel.qml</file>
         <file>Tactical/components/BattleAnalysisPanel.qml</file>
         <file>Tactical/components/CameraPreviewPanel.qml</file>
+        <file>Tactical/components/TerritoryStatusPanel.qml</file>
+        <file>Tactical/components/ControlPointsWing.qml</file>
         <file>Tactical/components/TopLogisticsStrip.qml</file>
         <file>OfficialEventPopup.qml</file>
         <file>Tactical/TacticalEventPopup.qml</file>

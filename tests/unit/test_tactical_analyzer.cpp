@@ -10,6 +10,46 @@ class TestTacticalAnalyzer : public QObject {
     Q_OBJECT
 
 private slots:
+    void test2027CommandProjection() {
+        GameData gameData;
+        gameData.setCurrentRobotId(101);
+        robomaster::GlobalUnitStatus status;
+        status.set_total_cp_ally(120);
+        status.set_total_cp_enemy(80);
+        status.set_outpost_status(1);
+        status.set_enemy_outpost_status(3);
+        for (int hp : {110, 130, 140, 170, 210, 230, 240, 270}) status.add_robot_health(hp);
+        gameData.updateGlobalUnitStatus(status);
+        QCOMPARE(gameData.command2027State().value("blueControlPoints").toInt(), 120);
+        QCOMPARE(gameData.command2027State().value("redControlPoints").toInt(), 80);
+        QCOMPARE(gameData.command2027State().value("rOutpostStatus").toInt(), 4);
+        QCOMPARE(gameData.command2027State().value("bOutpostStatus").toInt(), 2);
+        RM::TacticalAnalyzer analyzer(&gameData);
+        analyzer.setUseMockData(false);
+        analyzer.analyze();
+        const auto robots = analyzer.allyRobotList();
+        QCOMPARE(robots.size(), 5);
+        QCOMPARE(robots[0].toMap().value("label").toString(), QStringLiteral("重型工程"));
+        QCOMPARE(robots[1].toMap().value("hp").toInt(), 130);
+        QCOMPARE(robots[4].toMap().value("hp").toInt(), 170);
+        for (const auto &entry : robots) QVERIFY(entry.toMap().value("slot").toInt() != 2);
+        robomaster::GlobalSpecialMechanism mechanisms;
+        mechanisms.add_mechanism_id(3);
+        mechanisms.add_mechanism_time_sec(-9);
+        gameData.updateGlobalSpecialMechanism(mechanisms);
+        QCOMPARE(gameData.command2027State().value("mechanisms").toMap().value("3").toInt(), -9);
+        mechanisms.Clear();
+        gameData.updateGlobalSpecialMechanism(mechanisms);
+        QVERIFY(gameData.command2027State().value("mechanisms").toMap().isEmpty());
+        status.Clear();
+        status.set_total_cp_ally(0);
+        gameData.updateGlobalUnitStatus(status);
+        QCOMPARE(gameData.command2027State().value("blueControlPoints").toInt(), 0);
+        QCOMPARE(gameData.command2027State().value("redControlPoints").toInt(), 80);
+        gameData.setCurrentRobotId(1);
+        QVERIFY(gameData.command2027State().isEmpty());
+    }
+
     void testRespawnEconomyCalculation_data() {
         QTest::addColumn<int>("remainingTime");
         QTest::addColumn<int>("robotLevel");
@@ -137,8 +177,8 @@ private slots:
         const QVariantList allyRobots = analyzer.allyRobotList();
         const QVariantList enemyRobots = analyzer.enemyRobotList();
 
-        QCOMPARE(allyRobots.size(), 6);
-        QCOMPARE(enemyRobots.size(), 6);
+        QCOMPARE(allyRobots.size(), 5);
+        QCOMPARE(enemyRobots.size(), 5);
 
         auto containsSlotFive = [](const QVariantList &robots) {
             for (const QVariant &entry : robots) {
@@ -162,8 +202,8 @@ private slots:
         const QVariantList allyRobots = analyzer.allyRobotList();
         const QVariantList enemyRobots = analyzer.enemyRobotList();
 
-        QCOMPARE(allyRobots.size(), 6);
-        QCOMPARE(enemyRobots.size(), 6);
+        QCOMPARE(allyRobots.size(), 5);
+        QCOMPARE(enemyRobots.size(), 5);
 
         for (const QVariant &entry : allyRobots) {
             const QVariantMap robot = entry.toMap();
@@ -237,8 +277,12 @@ private slots:
         analyzer.setUseMockData(false);
 
         RobotData &enemyHero = gameData.getRobotDataRef(101);
-        enemyHero.hasTabGlobalSnapshot = true;
-        enemyHero.tabGlobalCurrentHP = 300;
+        auto publishHealth = [&](int hp) {
+            robomaster::GlobalUnitStatus packet;
+            for (int value : {300, 300, 300, 300, hp, 300, 300, 300}) packet.add_robot_health(value);
+            gameData.updateGlobalUnitStatus(packet);
+        };
+        publishHealth(300);
         QSignalSpy paidRespawnSpy(
             &analyzer, &RM::TacticalAnalyzer::enemyPaidRespawnDetected);
         QVERIFY(paidRespawnSpy.isValid());
@@ -246,11 +290,11 @@ private slots:
         analyzer.analyze();
         QCOMPARE(paidRespawnSpy.count(), 0);
 
-        enemyHero.tabGlobalCurrentHP = 0;
+        publishHealth(0);
         analyzer.analyze();
         QCOMPARE(paidRespawnSpy.count(), 0);
 
-        enemyHero.tabGlobalCurrentHP = 300;
+        publishHealth(300);
         analyzer.analyze();
         QCOMPARE(paidRespawnSpy.count(), 1);
         QCOMPARE(paidRespawnSpy.takeFirst().at(0).toInt(), 101);
@@ -268,8 +312,12 @@ private slots:
         RobotData &enemyHero = gameData.getRobotDataRef(1);
         enemyHero.tabStaticConnected = true;
         enemyHero.currentHP = 600;
-        enemyHero.hasTabGlobalSnapshot = true;
-        enemyHero.tabGlobalCurrentHP = 600;
+        auto publishHealth = [&](int hp) {
+            robomaster::GlobalUnitStatus packet;
+            for (int value : {300, 300, 300, 300, hp, 300, 300, 300}) packet.add_robot_health(value);
+            gameData.updateGlobalUnitStatus(packet);
+        };
+        publishHealth(600);
 
         QSignalSpy paidRespawnSpy(
             &analyzer, &RM::TacticalAnalyzer::enemyPaidRespawnDetected);
@@ -278,11 +326,11 @@ private slots:
         analyzer.analyze();
         QCOMPARE(paidRespawnSpy.count(), 0);
 
-        enemyHero.tabGlobalCurrentHP = 0;
+        publishHealth(0);
         analyzer.analyze();
         QCOMPARE(paidRespawnSpy.count(), 0);
 
-        enemyHero.tabGlobalCurrentHP = 600;
+        publishHealth(600);
         analyzer.analyze();
         QCOMPARE(paidRespawnSpy.count(), 1);
         QCOMPARE(paidRespawnSpy.takeFirst().at(0).toInt(), 1);
