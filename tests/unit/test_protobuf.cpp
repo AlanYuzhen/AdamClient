@@ -125,6 +125,21 @@ private slots:
     for (int index = 0; index < sentry->field_count(); ++index) {
       QVERIFY(sentry->field(index)->has_presence());
     }
+
+    const auto *radar = robomaster::RadarInfoToClient::descriptor();
+    QCOMPARE(radar->field_count(), 1);
+    QCOMPARE(radar->field(0)->type(), google::protobuf::FieldDescriptor::TYPE_UINT32);
+    QVERIFY(radar->field(0)->is_repeated());
+
+    const auto *mapClick = robomaster::MapClickCmd::descriptor();
+    QCOMPARE(mapClick->field_count(), 8);
+    for (int index = 0; index < mapClick->field_count(); ++index) {
+      QVERIFY(mapClick->field(index)->has_presence());
+    }
+
+    const auto *dynamicStatus = robomaster::RobotDynamicStatus::descriptor();
+    QCOMPARE(dynamicStatus->FindFieldByNumber(4)->name(), std::string("reserved"));
+    QVERIFY(dynamicStatus->FindFieldByNumber(4)->has_presence());
   }
 
   void testAirSupportStatusSyncIncludesLaserFields() {

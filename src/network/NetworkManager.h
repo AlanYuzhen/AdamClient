@@ -199,7 +199,7 @@ public:
   /**
    * @brief 发送客户端状态
    * @details 旧版 UDP 接口，仅用于历史兼容。
-   *          该消息不属于官方 V1.3.0 自定义客户端 MQTT 协议。
+   *          该旧版 UDP 消息不属于 2027 自定义终端 MQTT 命令表。
    *
    * @param volume     音量级别 (0-100)
    * @param resolution 分辨率字符串，如 "1920x1080"
@@ -213,7 +213,7 @@ public:
   /**
    * @brief 发送地图标记
    * @details 旧版 UDP 接口，仅用于历史兼容。
-   *          官方 MQTT 模式下应使用 `MapClickInfoNotify`。
+   *          官方 2027 MQTT 模式下发布 `MapClickCmd`。
    *
    * @param x    标记点 X 坐标 (地图坐标系)
    * @param y    标记点 Y 坐标 (地图坐标系)
@@ -236,7 +236,7 @@ public:
   /**
    * @brief 发送机器人指令
    * @details 旧版 UDP 接口，仅用于历史兼容。
-   *          该消息不属于官方 V1.3.0 自定义客户端 MQTT 协议。
+   *          该旧版 UDP 消息不属于 2027 自定义终端 MQTT 命令表。
    *
    * @param cmdType  指令类型（如移动、攻击等）
    * @param targetId 目标机器人 ID
@@ -262,7 +262,7 @@ public:
 
   /**
    * @brief 发送官方键鼠控制指令 KeyboardMouseControl（供 UI / dev hook 调用）
-   * @details 官方 V1.3.0 上行 topic 为 "KeyboardMouseControl"，频率上限 75Hz。
+   * @details 官方 2027 上行 topic 为 "KeyboardMouseControl"，频率上限 75Hz。
    * @return true = 已排入 MQTT 发布，false = 被限频 / 未连接 / 序列化失败
    */
   Q_INVOKABLE bool sendKeyboardMouseControl(
@@ -278,9 +278,8 @@ public:
   Q_INVOKABLE void sendAssemblyCommand(int operation, int difficulty);
 
   /**
-   * @brief 发送空中支援指令 AirSupportCommand（供 QML 调用）
-   * @param commandId 指令类型（0=中断/结束空中支援，1=免费呼叫，2=花费金币呼叫）
-   * @note 协议频率限制为 1Hz，本方法内置 1Hz 限频保护。
+   * @brief 兼容旧界面的空中支援入口
+   * @note AirSupportCommand 不在 2027 自定义终端命令表中，本方法拒绝发送。
    */
   Q_INVOKABLE bool sendAirSupportCommand(int commandId);
 
@@ -289,21 +288,22 @@ public:
    * @param shooter 射击性能选择
    * @param chassis 底盘性能选择
    * @param sentryControl 哨兵控制性能选择
-   * @note 官方 V1.3.0 协议，Topic: "RobotPerformanceSelectionCommand"
+   * @note 2027 协议 Topic: "RobotPerformanceSelectionCommand"
    */
   Q_INVOKABLE void sendRobotPerformanceSelection(uint32_t shooter, uint32_t chassis, uint32_t sentryControl);
 
+  Q_INVOKABLE bool sendSentryCtrlCommand(uint32_t commandId);
+
   /**
-   * @brief 发送英雄部署模式指令 HeroDeployModeEventCommand
-   * @param mode 部署模式
-   * @note 官方 V1.3.0 协议，Topic: "HeroDeployModeEventCommand"
+   * @brief 兼容旧界面的英雄部署入口
+   * @note HeroDeployModeEventCommand 不在 2027 自定义终端命令表中，本方法拒绝发送。
    */
   Q_INVOKABLE void sendHeroDeployMode(uint32_t mode);
 
   /**
    * @brief 发送能量机关激活指令 RuneActivateCommand
    * @param activate 激活标志（1=激活）
-   * @note 官方 V1.3.0 协议，Topic: "RuneActivateCommand"
+   * @note 2027 协议 Topic: "RuneActivateCommand"
    */
   Q_INVOKABLE void sendRuneActivate(uint32_t activate);
 
@@ -424,7 +424,11 @@ private:
   qint64 m_lastCommonCommandSentMs = 0;  ///< CommonCommand 最近发送时间戳（ms）
   qint64 m_lastAssemblyCommandSentMs = 0; ///< AssemblyCommand 最近发送时间戳（ms）
   qint64 m_lastAirSupportCommandSentMs = 0; ///< AirSupportCommand 最近发送时间戳（ms）
-  qint64 m_lastMapClickInfoSentMs = 0; ///< MapClickInfoNotify 最近发送时间戳（ms）
+  qint64 m_lastMapClickInfoSentMs = 0; ///< MapClickCmd 最近发送时间戳（ms）
+  qint64 m_lastSentryCtrlCommandSentMs = 0;
+  qint64 m_lastPerformanceSelectionSentMs = 0;
+  qint64 m_lastDartCommandSentMs = 0;
+  qint64 m_lastRuneActivateSentMs = 0;
   qint64 m_lastKeyboardMouseControlAttemptMs = 0; ///< KeyboardMouseControl 最近尝试发送时间戳（ms）
   qint64 m_lastKeyboardMouseControlSentMs = 0; ///< KeyboardMouseControl 最近成功发布排队时间戳（ms）
   qint64 m_lastKeyboardMouseControlDropLogMs = 0; ///< KeyboardMouseControl 最近丢弃日志时间戳（ms）

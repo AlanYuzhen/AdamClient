@@ -52,7 +52,7 @@ Rectangle {
     readonly property string redTeamName: root.gameDataContext
         ? (root.gameDataContext.redTeamName || "齐鲁工业大学 Adam") : "齐鲁工业大学 Adam"
     readonly property string blueTeamName: root.gameDataContext
-        ? (root.gameDataContext.blueTeamName || "上海交通大学 交龙") : "上海交通大学 交龙"
+        ? (root.gameDataContext.blueTeamName || "东北大学 TDT") : "东北大学 TDT"
     readonly property string allyTeamName: root.allyIsRed ? root.redTeamName : root.blueTeamName
     readonly property string enemyTeamName: root.allyIsRed ? root.blueTeamName : root.redTeamName
     readonly property int allyScore: root.allyIsRed

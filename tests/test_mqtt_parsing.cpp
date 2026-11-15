@@ -114,7 +114,7 @@ void TestMqttParsing::testMqttParsing() {
     msg.set_current_health(250);
     msg.set_current_heat(10.5f);
     msg.set_last_projectile_fire_rate(5.0f);
-    msg.set_current_chassis_energy(80);
+    msg.set_reserved(80);
     msg.set_current_buffer_energy(40);
     msg.set_current_experience(200);
     msg.set_experience_for_upgrade(500);
@@ -241,7 +241,9 @@ void TestMqttParsing::testMqttParsing() {
     info1.set_target_pos_y(200);
     info1.set_is_high_light(1);
     robomaster::RadarInfoToClient msg;
-    *msg.add_robot_info() = info1;
+    msg.add_robot_info(info1.target_pos_x());
+    msg.add_robot_info(info1.target_pos_y());
+    msg.add_robot_info(info1.is_high_light());
 
     sendAndPrint(QStringLiteral("RadarInfoToClient"), msg);
     QVERIFY(spyDataChanged.wait(200));

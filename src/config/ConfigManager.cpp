@@ -101,7 +101,7 @@ QString ConfigManager::getUIText(const QString &key) const {
 
 QString ConfigManager::getServerIP() const {
   return getEnvOrConfigString("RM_SERVER_IP", "network", "server_ip",
-                              "127.0.0.1");
+                              "192.168.12.1");
 }
 
 quint16 ConfigManager::getServerPort() const {
@@ -122,7 +122,7 @@ QString ConfigManager::getMqttBroker() const {
 }
 
 quint16 ConfigManager::getMqttPort() const {
-  return getEnvOrConfigPort("RM_MQTT_PORT", "network", "mqtt_port", 1883);
+  return getEnvOrConfigPort("RM_MQTT_PORT", "network", "mqtt_port", 3333);
 }
 
 int ConfigManager::getClientRobotId() const {

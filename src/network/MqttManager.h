@@ -3,7 +3,8 @@
  * @file MqttManager.h
  * @brief MQTT 客户端管理器
  * @details 封装 Eclipse Paho MQTT C 客户端，实现与裁判系统服务器的 MQTT 通信。
- *          按照官方《RoboMaster 2026 通信协议 V1.2.0》的自定义客户端协议规范。
+ *          按照官方《RoboMaster 2027 University Series Communication Protocol V1.0.0》
+ *          的自定义终端 Topic 与 MQTT 传输规范。
  * @author Clear
  * @date 2026-02-08
  * @copyright Copyright (c) 2026 Fudan University EGA Team (复旦大学星云 EGA 机器人战队).
@@ -43,7 +44,7 @@ typedef int MQTTClient_deliveryToken;
  * @brief MQTT 客户端管理器
  * @details 实现 MQTT 发布/订阅通信，用于自定义客户端协议。
  *          - 订阅：GameStatus、GlobalUnitStatus、RobotDynamicStatus 等
- *          - 发布：CommonCommand、MapClickInfoNotify、CustomControl 等
+ *          - 发布：CommonCommand、MapClickCmd、CustomControl 等
  */
 class MqttManager : public QObject {
   Q_OBJECT

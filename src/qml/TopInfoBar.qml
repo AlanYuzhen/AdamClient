@@ -43,7 +43,7 @@ Item {
     property int redEconomy: gameDataContext ? gameDataContext.redEconomy : 550
     property int blueEconomy: gameDataContext ? gameDataContext.blueEconomy : 550
     property string redTeamName: gameDataContext ? gameDataContext.redTeamName : "齐鲁工业大学 Adam"
-    property string blueTeamName: gameDataContext ? gameDataContext.blueTeamName : "上海交通大学 交龙"
+    property string blueTeamName: gameDataContext ? gameDataContext.blueTeamName : "东北大学 TDT"
 
     // 顶部栏只允许显示已有真实字段，禁止继续展示 mock 占领/固定 buff 值
     property int redDefenseBonus: gameDataContext ? gameDataContext.redDefenseBonus : 0

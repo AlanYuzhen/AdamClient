@@ -26,7 +26,7 @@
         "server_port": 3333,
         "client_port": 3333,
         "video_port": 3334,
-        "mqtt_broker": "127.0.0.1",
+        "mqtt_broker": "192.168.12.1",
         "mqtt_port": 3333,
         "client_robot_id": 1,
         "_comment": "示例只连接本机；机器人身份只接受红方 1-7 或蓝方 101-107，现场值不要提交"

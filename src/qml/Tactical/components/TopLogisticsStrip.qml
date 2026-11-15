@@ -14,7 +14,6 @@ Item {
     readonly property color allyAccent: allyIsBlue ? "#18b9ff" : "#ff3142"
     readonly property color enemyAccent: enemyIsBlue ? "#18b9ff" : "#ff3142"
     readonly property color fortressGroupAccent: root.allyAccent
-    readonly property int leftGroupShift: 24
     readonly property int groupGap: 92
     readonly property int cardGap: 8
     readonly property int groupTopPadding: Math.round(10 * uiScale)
@@ -25,11 +24,12 @@ Item {
     readonly property int fortressGroupWidth: Math.round(Math.min(560 * uiScale, width * 0.48))
     readonly property int statusGroupWidth: width - fortressGroupWidth - groupGap
     readonly property int smallCardWidth: Math.max(
-        92,
-        Math.floor((statusGroupWidth - groupInnerMargin * 2 - cardGap * 3) / 4)
+        0,
+        Math.floor((statusGroupWidth - groupInnerMargin * 2
+                    - sideBadgeWidth - sideBadgeGap - cardGap * 3) / 4)
     )
     readonly property int fortressCardWidth: Math.max(
-        180,
+        0,
         Math.floor((fortressGroupWidth - groupInnerMargin * 2 - cardGap) / 2)
     )
     readonly property int innerCardHeight: root.height - root.groupTopPadding - 12
@@ -52,7 +52,7 @@ Item {
 
     HudPanel {
         id: statusGroup
-        x: -root.leftGroupShift
+        x: 0
         y: root.groupTopPadding
         width: root.statusGroupWidth
         height: root.height - root.groupTopPadding
@@ -64,6 +64,7 @@ Item {
         Row {
             anchors.left: parent.left
             anchors.leftMargin: root.groupInnerMargin
+                + root.sideBadgeWidth + root.sideBadgeGap
             anchors.verticalCenter: parent.verticalCenter
             spacing: root.cardGap
 
@@ -191,7 +192,7 @@ Item {
     }
 
     Rectangle {
-        x: statusGroup.x - root.sideBadgeWidth - root.sideBadgeGap
+        x: statusGroup.x + root.groupInnerMargin
         y: statusGroup.y + 6
         width: root.sideBadgeWidth
         height: root.sideBadgeHeight

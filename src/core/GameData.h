@@ -773,6 +773,10 @@ public:
     return m_blueLogisticsStatus.encryptionLevel;
   }
   QVariantMap command2027State() const { return m_command2027State; }
+  void updateCommand2027Value(const QString &key, const QVariant &value) {
+    m_command2027State.insert(key, value);
+    emit command2027StateChanged();
+  }
   int allyFortressOccupationSec() const { return m_allyFortressOccupationSec; }
   int enemyFortressOccupationSec() const { return m_enemyFortressOccupationSec; }
   int currentTeamEconomy() const {
@@ -811,7 +815,7 @@ public:
 
   static QString enemyTeamName() {
     const QString envName = qEnvironmentVariable("RM_ENEMY_TEAM_NAME").trimmed();
-    return envName.isEmpty() ? QStringLiteral("上海交通大学 交龙") : envName;
+    return envName.isEmpty() ? QStringLiteral("东北大学 TDT") : envName;
   }
 
   QString redTeamName() const {

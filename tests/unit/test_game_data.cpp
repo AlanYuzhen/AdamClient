@@ -87,6 +87,24 @@ private slots:
     QCOMPARE(robot->currentHeat, 50);
   }
 
+  void testOptionalRobotDynamicFieldsPreservePriorValues() {
+    GameData gameData;
+    gameData.setCurrentRobotId(1);
+    robomaster::RobotDynamicStatus full;
+    full.set_current_health(321);
+    full.set_current_heat(42.0f);
+    full.set_current_buffer_energy(77);
+    gameData.updateRobotDynamicStatus(full);
+    robomaster::RobotDynamicStatus partial;
+    partial.set_current_heat(18.0f);
+    gameData.updateRobotDynamicStatus(partial);
+    const RobotData *robot = gameData.getRobotById(1);
+    QVERIFY(robot);
+    QCOMPARE(robot->currentHP, 321);
+    QCOMPARE(robot->currentHeat, 18);
+    QCOMPARE(robot->bufferEnergy, 77);
+  }
+
   void testRobotRosterRequiresStaticStatus() {
     GameData gameData;
 
@@ -505,10 +523,9 @@ private slots:
 
     robomaster::RadarInfoToClient packetFromRedPerspective;
     for (int i = 0; i < 10; ++i) {
-      auto *info = packetFromRedPerspective.add_robot_info();
-      info->set_target_pos_x(static_cast<uint32_t>((i + 1) * 100));
-      info->set_target_pos_y(static_cast<uint32_t>((i + 1) * 200));
-      info->set_is_high_light(i % 2);
+      packetFromRedPerspective.add_robot_info((i + 1) * 100);
+      packetFromRedPerspective.add_robot_info((i + 1) * 200);
+      packetFromRedPerspective.add_robot_info(i % 2);
     }
 
     gameData.updateRadarInfo(packetFromRedPerspective);
@@ -539,10 +556,9 @@ private slots:
     gameData.setCurrentRobotId(101);
     robomaster::RadarInfoToClient packetFromBluePerspective;
     for (int i = 0; i < 10; ++i) {
-      auto *info = packetFromBluePerspective.add_robot_info();
-      info->set_target_pos_x(static_cast<uint32_t>((i + 1) * 150));
-      info->set_target_pos_y(static_cast<uint32_t>((i + 1) * 250));
-      info->set_is_high_light((i + 1) % 2);
+      packetFromBluePerspective.add_robot_info((i + 1) * 150);
+      packetFromBluePerspective.add_robot_info((i + 1) * 250);
+      packetFromBluePerspective.add_robot_info((i + 1) % 2);
     }
 
     gameData.updateRadarInfo(packetFromBluePerspective);
@@ -695,13 +711,20 @@ private slots:
     QCOMPARE(gameData.remainTimeAll(), 45u);
     QCOMPARE(gameData.remainTimeStep(), 5u);
 
+    robomaster::TechCoreMotionStateSync partialTechCore;
+    partialTechCore.set_basic_state(0);
+    gameData.updateTechCoreMotionStateSync(partialTechCore);
+    QCOMPARE(gameData.techCoreBasicState(), 0u);
+    QCOMPARE(gameData.techCorePutinState(), 1u);
+    QCOMPARE(gameData.remainTimeAll(), 45u);
+
     robomaster::RoboMasterMessage eventWrapper;
     eventWrapper.mutable_event()->set_event_id(15);
     eventWrapper.mutable_event()->set_param("0");
     gameData.processProtocolData(eventWrapper);
 
     // Event 15 是飞镖闸门开启，不得修改 V2.0.0 工程装配同步状态。
-    QCOMPARE(gameData.techCoreBasicState(), 3u);
+    QCOMPARE(gameData.techCoreBasicState(), 0u);
     QCOMPARE(gameData.techCorePutinState(), 1u);
     QCOMPARE(gameData.techCoreMoveState(), 1u);
     QCOMPARE(gameData.techCoreRotateState(), 0u);
@@ -712,7 +735,7 @@ private slots:
     gameData.processProtocolData(eventWrapper);
 
     // Event 14 是飞镖命中，也不得修改 V2.0.0 工程装配同步状态。
-    QCOMPARE(gameData.techCoreBasicState(), 3u);
+    QCOMPARE(gameData.techCoreBasicState(), 0u);
     QCOMPARE(gameData.techCorePutinState(), 1u);
     QCOMPARE(gameData.techCoreMoveState(), 1u);
     QCOMPARE(gameData.techCoreRotateState(), 0u);
@@ -887,7 +910,8 @@ private slots:
     gameData.updateGlobalUnitStatus(status);
     QCOMPARE(armorOpenedSpy.count(), 0);
     QCOMPARE(gameData.getRedBase().status, static_cast<quint8>(2));
-    QCOMPARE(gameData.getRedBase().virtualShield, static_cast<quint16>(100));
+    QCOMPARE(gameData.getRedBase().virtualShield, static_cast<quint16>(0));
+    QCOMPARE(gameData.command2027State().value("redBaseControl").toUInt(), 100U);
 
     // 周期性重复快照不应重复触发。
     gameData.updateGlobalUnitStatus(status);
@@ -965,7 +989,8 @@ private slots:
     gameData.updateGlobalUnitStatus(status);
     QCOMPARE(armorOpenedSpy.count(), 1);
     QCOMPARE(gameData.getBlueBase().status, static_cast<quint8>(2));
-    QCOMPARE(gameData.getBlueBase().virtualShield, static_cast<quint16>(75));
+    QCOMPARE(gameData.getBlueBase().virtualShield, static_cast<quint16>(0));
+    QCOMPARE(gameData.command2027State().value("blueBaseControl").toUInt(), 75U);
   }
 
   void testAllyBaseArmorOpenedIsSuppressedBeforeBattle() {

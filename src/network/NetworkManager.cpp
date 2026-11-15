@@ -76,7 +76,7 @@ bool shouldThrottleCommand(qint64 &lastSentMs, qint64 minIntervalMs) {
 QString mqttTopicForMessage(const robomaster::RoboMasterMessage &message) {
   switch (message.payload_case()) {
   case robomaster::RoboMasterMessage::kMapClick:
-    return QStringLiteral("MapClickInfoNotify");
+    return QStringLiteral("MapClickCmd");
   case robomaster::RoboMasterMessage::kCommonCommand:
     return QStringLiteral("CommonCommand");
   default:
@@ -322,6 +322,11 @@ void NetworkManager::sendData(const QByteArray &data,
                               const QHostAddress &address, quint16 port) {
 #ifdef RM_HAS_MQTT
   if (m_mqttManager && m_mqttManager->isConnected()) {
+    if (data.size() > 60) {
+      qWarning() << "NetworkManager: CustomControl exceeds 60-byte protocol limit"
+                 << data.size();
+      return;
+    }
     robomaster::CustomControl message;
     message.set_data(data.constData(), static_cast<size_t>(data.size()));
 
@@ -375,9 +380,20 @@ void NetworkManager::sendData(const robomaster::RoboMasterMessage &message,
 
     QByteArray payload;
     switch (message.payload_case()) {
-    case robomaster::RoboMasterMessage::kMapClick:
-      payload = serializeMessage(message.map_click());
+    case robomaster::RoboMasterMessage::kMapClick: {
+      const auto &legacy = message.map_click();
+      robomaster::MapClickCmd command;
+      command.set_is_send_all(legacy.is_send_all());
+      command.set_robot_id(legacy.robot_id());
+      command.set_mode(legacy.mode());
+      command.set_enemy_id(legacy.enemy_id());
+      command.set_ascii(legacy.ascii());
+      command.set_type(legacy.type());
+      command.set_map_x(legacy.map_x());
+      command.set_map_y(legacy.map_y());
+      payload = serializeMessage(command);
       break;
+    }
     case robomaster::RoboMasterMessage::kCommonCommand:
       payload = serializeMessage(message.common_command());
       break;
@@ -421,7 +437,7 @@ void NetworkManager::sendData(const robomaster::RoboMasterMessage &message,
 /**
  * @brief 发送地图标记消息
  * @details 旧版 UDP 接口。
- *          官方 V1.3.0 MQTT 模式下应改用 MapClickInfoNotify。
+ *          2027 MQTT 模式下使用 MapClickCmd。
  *
  * @param x    标记点 X 坐标
  * @param y    标记点 Y 坐标
@@ -460,7 +476,7 @@ void NetworkManager::sendMapMarking(float x, float y, int type) {
 /**
  * @brief 发送机器人控制指令
  * @details 旧版 UDP 接口。
- *          官方 V1.3.0 MQTT 模式下不再使用 RobotCommand。
+ *          2027 自定义终端不通过 UDP 发送 RobotCommand。
  *
  * @param cmdType  指令类型编码
  * @param targetId 目标机器人 ID
@@ -532,6 +548,11 @@ void NetworkManager::sendCommonCommand(int cmdType, int param) {
 
 void NetworkManager::sendDartCommand(uint32_t targetId, bool open, bool launchConfirm) {
 #ifdef RM_HAS_MQTT
+  if (shouldThrottleCommand(m_lastDartCommandSentMs, 100)) {
+    qWarning() << "NetworkManager: DartCommand throttled to <= 10Hz";
+    return;
+  }
+
   robomaster::DartCommand cmd;
   cmd.set_target_id(targetId);
   cmd.set_open(open);
@@ -567,7 +588,7 @@ bool NetworkManager::sendKeyboardMouseControl(
     int mouseX, int mouseY, int mouseZ, bool leftButtonDown,
     bool rightButtonDown, bool midButtonDown, quint32 keyboardValue) {
 #ifdef RM_HAS_MQTT
-  constexpr qint64 kKeyboardMouseMinIntervalMs = 13; // 最高约 75 Hz。
+  constexpr qint64 kKeyboardMouseMinIntervalMs = 14; // 不超过协议 75 Hz。
   const bool isNeutralFrame =
       mouseX == 0 && mouseY == 0 && mouseZ == 0 && !leftButtonDown &&
       !rightButtonDown && !midButtonDown && keyboardValue == 0;
@@ -673,13 +694,13 @@ void NetworkManager::sendMapClickInfo(quint32 targetRobotId, float x, float y,
                                       bool sendAll) {
 #ifdef RM_HAS_MQTT
   if (shouldThrottleCommand(m_lastMapClickInfoSentMs, 500)) {
-    qWarning() << "NetworkManager: MapClickInfoNotify throttled to <= 2Hz"
+    qWarning() << "NetworkManager: MapClickCmd throttled to <= 2Hz"
                << "targetRobotId=" << targetRobotId << "x=" << x << "y=" << y;
     return;
   }
 
-  robomaster::MapClickInfoNotify notify;
-  notify.set_is_send_all((sendAll || targetRobotId == 0) ? 1 : 0);
+  robomaster::MapClickCmd notify;
+  notify.set_is_send_all(sendAll ? 2 : (targetRobotId == 0 ? 1 : 0));
 
   // robot_id 是 7 字节目标 ID 列表，不是位图。红方写 1..7，蓝方写
   // 101..107，未使用位置补 0。
@@ -697,17 +718,17 @@ void NetworkManager::sendMapClickInfo(quint32 targetRobotId, float x, float y,
 
   const QByteArray payload = serializeMessage(notify);
   if (payload.isEmpty()) {
-    qWarning() << "NetworkManager: Failed to serialize MapClickInfoNotify protobuf";
+    qWarning() << "NetworkManager: Failed to serialize MapClickCmd protobuf";
     return;
   }
 
   if (m_mqttManager && m_mqttManager->isConnected()) {
-    m_mqttManager->publish(QStringLiteral("MapClickInfoNotify"), payload, 1);
+    m_mqttManager->publish(QStringLiteral("MapClickCmd"), payload, 1);
     emit dataSent(payload);
     return;
   }
 
-  qWarning() << "NetworkManager: MQTT not connected, dropping MapClickInfoNotify";
+  qWarning() << "NetworkManager: MQTT not connected, dropping MapClickCmd";
 #else
   Q_UNUSED(targetRobotId);
   Q_UNUSED(x);
@@ -716,7 +737,7 @@ void NetworkManager::sendMapClickInfo(quint32 targetRobotId, float x, float y,
   Q_UNUSED(ascii);
   Q_UNUSED(enemyId);
   Q_UNUSED(sendAll);
-  qWarning() << "NetworkManager: MQTT not available in this build, dropping MapClickInfoNotify";
+  qWarning() << "NetworkManager: MQTT not available in this build, dropping MapClickCmd";
 #endif
 }
 
@@ -773,48 +794,9 @@ void NetworkManager::sendAssemblyCommand(int operation, int difficulty) {
 
 bool NetworkManager::sendAirSupportCommand(int commandId) {
 #ifdef RM_HAS_MQTT
-  if (shouldThrottleCommand(m_lastAirSupportCommandSentMs, 1000)) {
-    qWarning() << "NetworkManager: AirSupportCommand throttled to <= 1Hz"
-               << "commandId=" << commandId;
-    return false;
-  }
-
-  robomaster::AirSupportCommand cmd;
-  cmd.set_command_id(commandId);
-
-  const QByteArray payload = serializeMessage(cmd);
-  // AirSupportCommand.command_id 使用显式存在性，因此中断命令 command_id=0
-  // 也必须在传输数据中保留该字段。
-  if (payload.isEmpty()) {
-    qWarning() << "NetworkManager: Failed to serialize AirSupportCommand protobuf"
-               << "commandId=" << commandId
-               << "command=" << airSupportCommandName(commandId);
-    return false;
-  }
-
-  if (m_mqttManager && m_mqttManager->isConnected()) {
-    if (!m_mqttManager->publish(QStringLiteral("AirSupportCommand"), payload, 1)) {
-      qWarning() << "NetworkManager: Failed to publish AirSupportCommand"
-                 << "commandId=" << commandId
-                 << "command=" << airSupportCommandName(commandId);
-      return false;
-    }
-    const QByteArray debugLog =
-        QStringLiteral("MQTT TX AirSupportCommand topic=AirSupportCommand "
-                       "commandId=%1 command=%2 bytes=%3")
-            .arg(commandId)
-            .arg(airSupportCommandName(commandId))
-            .arg(payload.size())
-            .toUtf8();
-    qInfo() << "NetworkManager: Published AirSupportCommand via MQTT"
-            << "commandId=" << commandId
-            << "command=" << airSupportCommandName(commandId)
-            << "bytes=" << payload.size();
-    emit dataSent(debugLog);
-    return true;
-  }
-
-  qWarning() << "NetworkManager: MQTT not connected, dropping AirSupportCommand";
+  Q_UNUSED(commandId);
+  qWarning() << "NetworkManager: AirSupportCommand is not defined by the 2027 custom-terminal command table";
+  return false;
   return false;
 #else
   Q_UNUSED(commandId);
@@ -825,6 +807,11 @@ bool NetworkManager::sendAirSupportCommand(int commandId) {
 
 void NetworkManager::sendRobotPerformanceSelection(uint32_t shooter, uint32_t chassis, uint32_t sentryControl) {
 #ifdef RM_HAS_MQTT
+  if (shouldThrottleCommand(m_lastPerformanceSelectionSentMs, 100)) {
+    qWarning() << "NetworkManager: RobotPerformanceSelectionCommand throttled to <= 10Hz";
+    return;
+  }
+
   robomaster::RobotPerformanceSelectionCommand cmd;
   cmd.set_shooter(shooter);
   cmd.set_chassis(chassis);
@@ -852,8 +839,28 @@ void NetworkManager::sendRobotPerformanceSelection(uint32_t shooter, uint32_t ch
 #endif
 }
 
+bool NetworkManager::sendSentryCtrlCommand(uint32_t commandId) {
+#ifdef RM_HAS_MQTT
+  if ((commandId < 1 || commandId > 12 || commandId == 2) ||
+      shouldThrottleCommand(m_lastSentryCtrlCommandSentMs, 100))
+    return false;
+  if (!m_mqttManager || !m_mqttManager->isConnected()) return false;
+  robomaster::SentryCtrlCommand command;
+  command.set_command_id(commandId);
+  const QByteArray payload = serializeMessage(command);
+  return !payload.isEmpty() && m_mqttManager->publish(QStringLiteral("SentryCtrlCommand"), payload, 1);
+#else
+  Q_UNUSED(commandId);
+  return false;
+#endif
+}
+
 void NetworkManager::sendHeroDeployMode(uint32_t mode) {
 #ifdef RM_HAS_MQTT
+  Q_UNUSED(mode);
+  qWarning() << "NetworkManager: HeroDeployModeEventCommand is not defined by the 2027 custom-terminal command table";
+  return;
+
   robomaster::HeroDeployModeEventCommand cmd;
   cmd.set_mode(mode);
 
@@ -888,6 +895,11 @@ void NetworkManager::sendHeroDeployMode(uint32_t mode) {
 
 void NetworkManager::sendRuneActivate(uint32_t activate) {
 #ifdef RM_HAS_MQTT
+  if (shouldThrottleCommand(m_lastRuneActivateSentMs, 100)) {
+    qWarning() << "NetworkManager: RuneActivateCommand throttled to <= 10Hz";
+    return;
+  }
+
   robomaster::RuneActivateCommand cmd;
   cmd.set_activate(activate);
 
@@ -914,7 +926,7 @@ void NetworkManager::sendRuneActivate(uint32_t activate) {
 /**
  * @brief 发送客户端状态信息
  * @details 旧版 UDP 接口。
- *          官方 V1.3.0 MQTT 模式下不再使用 ClientStatus。
+ *          2027 自定义终端不通过 UDP 发送 ClientStatus。
  *
  * @param volume     音量级别 (0-100)
  * @param resolution 分辨率字符串，如 "1920x1080"
@@ -1116,14 +1128,11 @@ void NetworkManager::subscribeToTopics() {
       "CustomByteBlock",        // 机器人自定义上传数据流
       "TechCoreMotionStateSync", // 科技核心运动状态同步
       "RobotPerformanceSelectionSync", // 性能体系状态同步
-      "DeployModeStatusSync",   // 英雄部署模式状态同步
-      "Event",                  // 事件通知
-      "CustomRobotData",         // 自定义机器人数据
       "RuneStatusSync",         // 能量机关状态同步
       "SentryStatusSync",       // 哨兵姿态与弱化状态
       "DartSelectTargetStatusSync", // 飞镖目标选择状态同步
       "SentryCtrlResult",       // 哨兵控制结果
-      "AirSupportStatusSync",   // 空中支援状态
+      "MapClickInfo",           // 2027 地图标记同步
   };
 
   for (const QString &topic : topics) {
@@ -1336,9 +1345,9 @@ void NetworkManager::processMqttMessage(const QString &topic,
     if (msg.ParseFromArray(payload.data(), payload.size())) {
       dumpMqttEvent(
           QStringLiteral("parsed"), topic, payload, m_gameData,
-          QStringLiteral("RobotDynamicStatus has_no_robot_id current_health=%1 remaining_ammo=%2")
-              .arg(msg.current_health())
-              .arg(msg.remaining_ammo()),
+      QStringLiteral("RobotDynamicStatus has_no_robot_id current_health=%1 remaining_ammo=%2")
+              .arg(msg.has_current_health() ? QString::number(msg.current_health()) : QStringLiteral("absent"))
+              .arg(msg.has_remaining_ammo() ? QString::number(msg.remaining_ammo()) : QStringLiteral("absent")),
           QJsonObject{{QStringLiteral("protocol_has_robot_id"), false},
                       {QStringLiteral("current_health"),
                        static_cast<int>(msg.current_health())},
@@ -1357,7 +1366,7 @@ void NetworkManager::processMqttMessage(const QString &topic,
                             "remote_heal=%12 remote_ammo=%13")
                  .arg(msg.current_health()).arg(msg.current_heat())
                  .arg(msg.last_projectile_fire_rate())
-                 .arg(msg.current_chassis_energy())
+                 .arg(msg.reserved())
                  .arg(msg.current_buffer_energy())
                  .arg(msg.current_experience()).arg(msg.experience_for_upgrade())
                  .arg(msg.total_projectiles_fired()).arg(msg.remaining_ammo())
@@ -1369,6 +1378,7 @@ void NetworkManager::processMqttMessage(const QString &topic,
   } else if (topic == "RobotPosition") {
     robomaster::RobotPosition msg;
     if (msg.ParseFromArray(payload.data(), payload.size())) {
+      if (!msg.has_robot_id()) msg.set_robot_id(m_gameData->getMyRobotId());
       dumpMqttEvent(
           QStringLiteral("parsed"), topic, payload, m_gameData,
           QStringLiteral("RobotPosition robot_id=%1 x=%2 y=%3 yaw=%4")
@@ -1432,6 +1442,47 @@ void NetworkManager::processMqttMessage(const QString &topic,
                       {QStringLiteral("rfid"), static_cast<int>(msg.rfid())},
                       {QStringLiteral("uwb"), static_cast<int>(msg.uwb())}});
       m_gameData->updateRobotModuleStatus(msg);
+    }
+  } else if (topic == "RobotPerformanceSelectionSync") {
+    robomaster::RobotPerformanceSelectionSync msg;
+    if (msg.ParseFromArray(payload.constData(), payload.size())) {
+      QVariantMap selection = m_gameData->command2027State().value("performanceSelection").toMap();
+      if (msg.has_shooter()) selection.insert(QStringLiteral("shooter"), static_cast<int>(msg.shooter()));
+      if (msg.has_chassis()) selection.insert(QStringLiteral("chassis"), static_cast<int>(msg.chassis()));
+      if (msg.has_sentry_control()) selection.insert(QStringLiteral("sentryControl"), static_cast<int>(msg.sentry_control()));
+      m_gameData->updateCommand2027Value(QStringLiteral("performanceSelection"), selection);
+    }
+  } else if (topic == "SentryStatusSync") {
+    robomaster::SentryStatusSync msg;
+    if (msg.ParseFromArray(payload.constData(), payload.size())) {
+      QVariantMap status = m_gameData->command2027State().value("sentryStatus").toMap();
+      if (msg.has_posture_id()) status.insert(QStringLiteral("postureId"), static_cast<int>(msg.posture_id()));
+      if (msg.has_is_weakened()) status.insert(QStringLiteral("isWeakened"), msg.is_weakened());
+      if (msg.has_is_powered()) status.insert(QStringLiteral("isPowered"), msg.is_powered());
+      m_gameData->updateCommand2027Value(QStringLiteral("sentryStatus"), status);
+    }
+  } else if (topic == "SentryCtrlResult") {
+    robomaster::SentryCtrlResult msg;
+    if (msg.ParseFromArray(payload.constData(), payload.size())) {
+      QVariantMap result = m_gameData->command2027State().value("sentryCtrlResult").toMap();
+      if (msg.has_command_id()) result.insert(QStringLiteral("commandId"), static_cast<int>(msg.command_id()));
+      if (msg.has_result_code()) result.insert(QStringLiteral("resultCode"), static_cast<int>(msg.result_code()));
+      m_gameData->updateCommand2027Value(QStringLiteral("sentryCtrlResult"), result);
+    }
+  } else if (topic == "MapClickInfo") {
+    robomaster::MapClickInfo msg;
+    if (msg.ParseFromArray(payload.constData(), payload.size())) {
+      QVariantMap marker;
+      if (msg.has_is_send_all()) marker.insert(QStringLiteral("range"), static_cast<int>(msg.is_send_all()));
+      if (msg.has_robot_id()) marker.insert(QStringLiteral("robotIds"), QByteArray::fromStdString(msg.robot_id()));
+      if (msg.has_mode()) marker.insert(QStringLiteral("mode"), static_cast<int>(msg.mode()));
+      if (msg.has_enemy_id()) marker.insert(QStringLiteral("enemyId"), static_cast<int>(msg.enemy_id()));
+      if (msg.has_ascii()) marker.insert(QStringLiteral("ascii"), static_cast<int>(msg.ascii()));
+      if (msg.has_type()) marker.insert(QStringLiteral("type"), static_cast<int>(msg.type()));
+      if (msg.has_map_x()) marker.insert(QStringLiteral("x"), msg.map_x());
+      if (msg.has_map_y()) marker.insert(QStringLiteral("y"), msg.map_y());
+      marker.insert(QStringLiteral("receivedMs"), QDateTime::currentMSecsSinceEpoch());
+      m_gameData->updateCommand2027Value(QStringLiteral("lastMapMarker"), marker);
     }
   } else if (topic == "RuneStatusSync") {
     robomaster::RuneStatusSync msg;

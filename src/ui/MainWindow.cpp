@@ -1573,9 +1573,12 @@ quint8 MainWindow::robotIdFromSettingsType(const QString &robotType) const {
 }
 
 // 根据 SettingsPanel 选择的 robotType 生成协议定义的 MQTT clientId。
-// V1.3 文档定义：红方 1~7，蓝方 101~107。
+// Appendix II encodes MQTT client identity as 0x0100 + robot ID.
 QString MainWindow::mqttClientIdForRobotType(const QString &robotType) const {
-  return QString::number(robotIdFromSettingsType(robotType));
+  const int robotId = robotIdFromSettingsType(robotType);
+  const int number = robotId % 100;
+  if (number < 1 || number > 7 || number == 2) return {};
+  return QString::number(0x0100 + robotId);
 }
 
 // 返回可尝试的 clientId 列表。
@@ -1584,6 +1587,12 @@ QString MainWindow::mqttClientIdForRobotType(const QString &robotType) const {
 QStringList MainWindow::mqttClientIdCandidatesForRobotType(
     const QString &robotType) const {
   QStringList candidates;
+
+  const int selectedRobotId = robotIdFromSettingsType(robotType);
+  const int selectedNumber = selectedRobotId % 100;
+  if (selectedNumber < 1 || selectedNumber > 7 || selectedNumber == 2) {
+    return candidates;
+  }
 
   const QString protocolId = mqttClientIdForRobotType(robotType).trimmed();
   if (!protocolId.isEmpty()) {
@@ -7648,8 +7657,8 @@ void MainWindow::keyPressEvent(QKeyEvent *event) {
 
           // 模拟数据
           m_gameResultWidget->setGameData(2, 1, 3, "04:59");
-          m_gameResultWidget->setTeamData("齐鲁工业大学 Adam", "上海交通大学", "Adam",
-                                          "SJTU");
+          m_gameResultWidget->setTeamData("齐鲁工业大学 Adam", "东北大学", "Adam",
+                                          "TDT");
 
           // 模拟机器人数据 (含伤害统计)
           QMap<int, GameResultWidget::RobotStats> redRobots;
