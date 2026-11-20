@@ -30,11 +30,10 @@ class MatchSimulationEngine:
     EVENT_TIMELINE = (
         ("rune_metrics", 0.08, 3, "4,7.2", "己方完成能量机关识别"),
         ("rune_activated", 0.12, 4, "1", "己方激活小能量机关"),
-        ("air_support", 0.22, 7, "", "对方空中支援入场"),
         ("hero_snipe", 0.30, 5, "100", "己方英雄完成狙击"),
         ("own_kill", 0.34, 1, "", "己方英雄击毁对方步兵"),
         ("dart_hit", 0.48, 9, "", "己方飞镖命中对方前哨站"),
-        ("enemy_kill", 0.62, 1, "", "己方空中机器人阵亡"),
+        ("enemy_kill", 0.62, 1, "", "己方步兵阵亡"),
         ("outpost_stopped", 0.68, 12, "", "对方前哨站停转"),
         ("outpost_destroyed", 0.76, 2, "", "对方前哨站被摧毁"),
         ("base_under_attack", 0.84, 11, "", "己方基地遭到攻击"),
@@ -387,14 +386,14 @@ class MatchSimulationEngine:
         own_team = self._operator_team
         enemy_team = "red" if own_team == "blue" else "blue"
         own_ids = (
-            {"hero": 101, "infantry": 103, "aerial": 106}
+            {"hero": 101, "infantry": 103}
             if own_team == "blue"
-            else {"hero": 1, "infantry": 3, "aerial": 6}
+            else {"hero": 1, "infantry": 3}
         )
         enemy_ids = (
-            {"hero": 101, "infantry": 103, "aerial": 106}
+            {"hero": 101, "infantry": 103}
             if enemy_team == "blue"
-            else {"hero": 1, "infantry": 3, "aerial": 6}
+            else {"hero": 1, "infantry": 3}
         )
         resolved_param = str(param)
         resolved_label = str(label)
@@ -404,9 +403,6 @@ class MatchSimulationEngine:
         if key in ("rune_metrics", "rune_activated", "hero_snipe"):
             associated_team = own_team
             resolved_label = resolved_label.replace("己方", self._team_label(own_team))
-        elif key == "air_support":
-            associated_team = enemy_team
-            resolved_label = resolved_label.replace("对方", self._team_label(enemy_team))
         elif key == "own_kill":
             associated_team = own_team
             target_team = enemy_team
@@ -426,8 +422,8 @@ class MatchSimulationEngine:
         elif key == "enemy_kill":
             associated_team = enemy_team
             target_team = own_team
-            resolved_param = "%d,%d" % (own_ids["aerial"], enemy_ids["infantry"])
-            resolved_label = "%s空中机器人被%s步兵击毁" % (
+            resolved_param = "%d,%d" % (own_ids["infantry"], enemy_ids["infantry"])
+            resolved_label = "%s步兵被%s步兵击毁" % (
                 self._team_label(own_team),
                 self._team_label(enemy_team),
             )
@@ -513,10 +509,9 @@ class MatchSimulationEngine:
 
         own_is_blue = self._operator_team == "blue"
         enemy_infantry_index = 1 if own_is_blue else 5
-        own_aerial_index = 6 if own_is_blue else 2
+        own_infantry_index = 5 if own_is_blue else 1
 
-        # 两段可见的阵亡/复活窗口与相对击杀事件对应：先由己方英雄击毁对方步兵，
-        # 再由对方步兵击毁己方空中机器人。
+        # 2027 阵容没有空中机器人：两段阵亡/复活窗口改为双方步兵。
         if 0.34 <= battle_progress < 0.38:
             health[enemy_infantry_index] = 0
         elif 0.38 <= battle_progress < 0.43:
@@ -526,9 +521,9 @@ class MatchSimulationEngine:
             )
 
         if 0.62 <= battle_progress < 0.66:
-            health[own_aerial_index] = 0
+            health[own_infantry_index] = 0
         elif 0.66 <= battle_progress < 0.71:
-            health[own_aerial_index] = min(
+            health[own_infantry_index] = min(
                 600,
                 500 + int((battle_progress - 0.66) * 2000),
             )

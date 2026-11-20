@@ -54,6 +54,8 @@ except ImportError as e:
     print(f"无法导入 Protobuf 消息: {e}")
     pb = None
 
+from .verification import TerminalVerifier
+
 
 class MQTTPublisher:
     """
@@ -123,6 +125,8 @@ class MQTTPublisher:
         self._last_respawn_target_robot_id: Optional[int] = None
         self._last_respawn_snapshot = None
         self._publish_log_context = threading.local()
+        # 上行指令验证器（供 /api/verify/* 查询）
+        self.verifier = TerminalVerifier()
 
         self._init_client()
 
@@ -146,18 +150,21 @@ class MQTTPublisher:
                 f"{self.broker_host}:{self.broker_port}, current_robot_id={self.current_robot_id}"
             )
             # 订阅官方 V2.0.0 自定义终端上行 topic
+            # 2027 自定义终端上行指令表（2.1）：不再包含 AirSupport/HeroDeploy。
             for topic in (
                 "KeyboardMouseControl",
                 "CustomControl",
-                "MapClickInfoNotify",
+                "MapClickCmd",
                 "AssemblyCommand",
                 "RobotPerformanceSelectionCommand",
                 "CommonCommand",
-                "HeroDeployModeEventCommand",
                 "RuneActivateCommand",
                 "DartCommand",
                 "SentryCtrlCommand",
+                # 2026 遗留 topic：显式订阅以便验证器标记“终端仍在使用旧指令”。
                 "AirSupportCommand",
+                "HeroDeployModeEventCommand",
+                "MapClickInfoNotify",
             ):
                 client.subscribe(topic)
         else:
@@ -174,18 +181,19 @@ class MQTTPublisher:
         topic = msg.topic
         payload = msg.payload
 
+        # 先记录再做允许列表过滤：2027 未定义的 topic 也要被标记出来。
+        self.verifier.record(topic, payload)
+
         if topic not in {
             "KeyboardMouseControl",
             "CustomControl",
-            "MapClickInfoNotify",
+            "MapClickCmd",
             "AssemblyCommand",
             "RobotPerformanceSelectionCommand",
             "CommonCommand",
-            "HeroDeployModeEventCommand",
             "RuneActivateCommand",
             "DartCommand",
             "SentryCtrlCommand",
-            "AirSupportCommand",
         }:
             return
 
@@ -221,7 +229,7 @@ class MQTTPublisher:
                 print(f"MQTTPublisher: CustomControl parse error - {e}")
             return
 
-        if topic == "MapClickInfoNotify":
+        if topic in ("MapClickCmd", "MapClickInfoNotify"):
             try:
                 map_click = pb.MapClickInfoNotify()
                 map_click.ParseFromString(payload)
@@ -871,20 +879,16 @@ class MQTTPublisher:
         total_damage_blue = int(status.get("total_damage_blue", 0))
 
         is_blue_perspective = int(self.current_robot_id or 1) >= 100
-        # 己方和敌方各补齐到 5 台机器人，使自定义终端采用中型阵容（5+5），
-        # 避免把紧凑阵容（3+3）误判为仅己方的扩展阵容。
-        # 红方编号为 {1,2,3,4,7}，蓝方编号为 {101,102,103,104,107}。
+        # 2027：基地/累计控制度按视角，R/B 前哨按固定红蓝身份。
+        red_control = int(status.get("red_control_points", 0))
+        blue_control = int(status.get("blue_control_points", 0))
         if is_blue_perspective:
             ally_base_health = blue_base_health
             ally_base_status = blue_base_status
             ally_base_shield = blue_base_shield
-            ally_outpost_health = blue_outpost_health
-            ally_outpost_status = blue_outpost_status
             enemy_base_health = red_base_health
             enemy_base_status = red_base_status
             enemy_base_shield = red_base_shield
-            enemy_outpost_health = red_outpost_health
-            enemy_outpost_status = red_outpost_status
             ally_robot_health, ally_robot_bullets = (
                 self._build_protocol_global_unit_robot_values(state, "blue")
             )
@@ -893,17 +897,15 @@ class MQTTPublisher:
             )
             total_damage_ally = total_damage_blue
             total_damage_enemy = total_damage_red
+            total_cp_ally = blue_control
+            total_cp_enemy = red_control
         else:
             ally_base_health = red_base_health
             ally_base_status = red_base_status
             ally_base_shield = red_base_shield
-            ally_outpost_health = red_outpost_health
-            ally_outpost_status = red_outpost_status
             enemy_base_health = blue_base_health
             enemy_base_status = blue_base_status
             enemy_base_shield = blue_base_shield
-            enemy_outpost_health = blue_outpost_health
-            enemy_outpost_status = blue_outpost_status
             ally_robot_health, ally_robot_bullets = (
                 self._build_protocol_global_unit_robot_values(state, "red")
             )
@@ -912,30 +914,34 @@ class MQTTPublisher:
             )
             total_damage_ally = total_damage_red
             total_damage_enemy = total_damage_blue
+            total_cp_ally = red_control
+            total_cp_enemy = blue_control
 
         msg = pb.GlobalUnitStatus()
         msg.base_health = ally_base_health
         msg.base_status = ally_base_status
         msg.base_shield = ally_base_shield
-        msg.outpost_health = ally_outpost_health
-        msg.outpost_status = ally_outpost_status
+        msg.outpost_R_health = red_outpost_health
+        msg.outpost_R_status = red_outpost_status
         msg.enemy_base_health = enemy_base_health
         msg.enemy_base_status = enemy_base_status
         msg.enemy_base_shield = enemy_base_shield
-        msg.enemy_outpost_health = enemy_outpost_health
-        msg.enemy_outpost_status = enemy_outpost_status
+        msg.outpost_B_health = blue_outpost_health
+        msg.outpost_B_status = blue_outpost_status
 
         for hp in ally_robot_health:
             msg.robot_health.append(int(hp))
-
         for hp in enemy_robot_health:
             msg.robot_health.append(int(hp))
 
+        # 2027：robot_bullets 只包含己方机器人。
         for bullets in ally_robot_bullets:
             msg.robot_bullets.append(int(bullets))
 
         msg.total_damage_ally = total_damage_ally
         msg.total_damage_enemy = total_damage_enemy
+        msg.total_CP_ally = total_cp_ally
+        msg.total_CP_enemy = total_cp_enemy
 
         self._publish("GlobalUnitStatus", msg.SerializeToString())
 
@@ -1056,8 +1062,9 @@ class MQTTPublisher:
             return 0
 
     def _radar_robot_order(self):
-        red_order = [1, 2, 3, 4, 6, 7]
-        blue_order = [101, 102, 103, 104, 106, 107]
+        # 2027 协议 2.2.19：对方 1/3/4/7，然后己方 1/3/4/7（共 8 台）。
+        red_order = [1, 3, 4, 7]
+        blue_order = [101, 103, 104, 107]
         return red_order + blue_order if (self.current_robot_id or 1) >= 100 else blue_order + red_order
 
     def _current_team_name(self) -> str:
@@ -1130,9 +1137,10 @@ class MQTTPublisher:
 
     @staticmethod
     def _global_unit_protocol_robot_ids(team_name: str):
+        # 2027 协议：GlobalUnitStatus 血量按 1/3/4/7 顺序，每方 4 台地面机器人。
         if str(team_name).strip().lower() == "blue":
-            return [101, 102, 103, 104, 106, 107]
-        return [1, 2, 3, 4, 6, 7]
+            return [101, 103, 104, 107]
+        return [1, 3, 4, 7]
 
     @staticmethod
     def _global_unit_protocol_robot_aliases(protocol_robot_id: int):
@@ -1195,46 +1203,57 @@ class MQTTPublisher:
     def _publish_robot_static_status(self, state: dict):
         if pb is None:
             return
-        static_status = dict(state.get("robotStaticStatus", {}))
+        robots = list(
+            state.get("robotIds")
+            or getattr(self.state_manager, "robot_ids", [])
+        )
+        if not robots:
+            robots = [self.current_robot_id or 1]
+        base = dict(state.get("robotStaticStatus", {}))
+        global_status = state.get("globalUnitStatus", {})
+        health = list(global_status.get("robot_health", []))
+        max_health_values = list(global_status.get("robot_max_hp", []))
 
-        msg = pb.RobotStaticStatus()
-        msg.connection_state = max(0, int(static_status.get("connection_state", 1)))
-        msg.field_state = max(0, int(static_status.get("field_state", 0)))
-        msg.alive_state = max(0, int(static_status.get("alive_state", 1)))
-        msg.robot_id = max(1, int(static_status.get("robot_id", self.current_robot_id or 1)))
-        msg.robot_type = max(0, int(static_status.get("robot_type", msg.robot_id % 100)))
-        msg.performance_system_shooter = max(
-            0, int(static_status.get("performance_system_shooter", 1))
-        )
-        msg.performance_system_chassis = max(
-            0, int(static_status.get("performance_system_chassis", 1))
-        )
-        msg.level = max(0, int(static_status.get("level", 1)))
-        msg.max_health = max(0, int(static_status.get("max_health", 600)))
-        msg.max_heat = max(0, int(static_status.get("max_heat", 240)))
-        msg.heat_cooldown_rate = max(
-            0.0, float(static_status.get("heat_cooldown_rate", 20.0))
-        )
-        msg.max_power = max(0, int(static_status.get("max_power", 120)))
-        msg.max_buffer_energy = max(
-            0, int(static_status.get("max_buffer_energy", 60))
-        )
-        msg.max_chassis_energy = max(
-            0, int(static_status.get("max_chassis_energy", 120))
-        )
-        self._publish("RobotStaticStatus", msg.SerializeToString())
-        publish_source = (
-            "periodic-1hz"
-            if bool(getattr(self._publish_log_context, "periodic", False))
-            else "event"
-        )
+        published = 0
+        for index, robot_id in enumerate(robots):
+            robot_id = int(robot_id)
+            hp = int(health[index]) if index < len(health) else 0
+            default_max_hp = (
+                int(max_health_values[index])
+                if index < len(max_health_values) and int(max_health_values[index]) > 0
+                else 600
+            )
+            msg = pb.RobotStaticStatus()
+            msg.connection_state = 1
+            msg.field_state = 0
+            msg.alive_state = 1 if hp > 0 else 2
+            msg.robot_id = robot_id
+            # 2027 编号：1 重装、3/4 步兵、7 哨兵，蓝方编号 +100。
+            msg.robot_type = max(0, int(base.get("robot_type", robot_id % 100)))
+            msg.performance_system_shooter = max(
+                0, int(base.get("performance_system_shooter", 1))
+            )
+            msg.performance_system_chassis = max(
+                0, int(base.get("performance_system_chassis", 1))
+            )
+            msg.level = max(0, int(base.get("level", 1)))
+            msg.max_health = max(0, int(base.get("max_health", default_max_hp)))
+            msg.max_heat = max(0, int(base.get("max_heat", 240)))
+            msg.heat_cooldown_rate = max(
+                0.0, float(base.get("heat_cooldown_rate", 20.0))
+            )
+            msg.max_power = max(0, int(base.get("max_power", 120)))
+            msg.max_buffer_energy = max(0, int(base.get("max_buffer_energy", 60)))
+            msg.max_chassis_energy = max(
+                0, int(base.get("max_chassis_energy", 120))
+            )
+            self._publish("RobotStaticStatus", msg.SerializeToString())
+            published += 1
+
         print(
             "MQTTPublisher: RobotStaticStatus sent "
-            f"source={publish_source} robot_id={msg.robot_id} "
-            f"robot_type={msg.robot_type} level={msg.level} "
-            f"perf_shooter={msg.performance_system_shooter} "
-            f"perf_chassis={msg.performance_system_chassis} "
-            f"max_health={msg.max_health} max_heat={msg.max_heat}"
+            f"source={'periodic-1hz' if bool(getattr(self._publish_log_context, 'periodic', False)) else 'event'} "
+            f"count={published} robots={[int(r) for r in robots]}"
         )
 
     def publish_robot_static_status(self, state: Optional[dict] = None):

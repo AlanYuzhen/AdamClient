@@ -166,10 +166,9 @@ class StateManager:
         # --- 复活相关 ---
         # 机器人 ID 顺序与 robot_health 列表索引保持一致
         default_robot_count = len(self.global_unit_status.get("robot_health", []))
-        # 机器人 ID 列表：默认使用当前模拟器重点联调的 8 台机器人
-        # 红方: 1/3/6/7，蓝方: 101/103/106/107
+        # 机器人 ID 列表：2027 阵容为每方 1/3/4/7（重装、两辆步兵、哨兵）
         if default_robot_count == 8:
-            self.robot_ids = [1, 3, 6, 7, 101, 103, 106, 107]
+            self.robot_ids = [1, 3, 4, 7, 101, 103, 104, 107]
         else:
             # 兜底使用从 1 开始的连续 ID
             self.robot_ids = list(range(1, default_robot_count + 1))
@@ -428,6 +427,8 @@ class StateManager:
             "blue_outpost_status": 1,
             "red_outpost_destroyed": False,
             "blue_outpost_destroyed": False,
+            "red_control_points": 0,
+            "blue_control_points": 0,
             "robot_health": [600] * 8, # 8 个机器人
             "robot_max_hp": [600] * 8, # 8 个机器人最大血量
             "robot_bullets": [0] * 8,
@@ -1019,6 +1020,8 @@ class StateManager:
         self.global_unit_status["blue_outpost_destroyed"] = False
         self.global_unit_status["total_damage_red"] = 0
         self.global_unit_status["total_damage_blue"] = 0
+        self.global_unit_status["red_control_points"] = 0
+        self.global_unit_status["blue_control_points"] = 0
         self.referee_info_by_team = {
             team_name: self._create_rune_state() for team_name in self.TEAM_NAMES
         }

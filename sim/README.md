@@ -111,6 +111,28 @@ Python 测试覆盖一键赛事演示的阶段推进、暂停恢复、事件幂�
 覆盖；JavaScript 测试覆盖地图坐标在缩放与高 DPI 场景下的换算。两组测试均从仓库根目录运行，
 并接入 Quality CI。涉及 Broker、视频和自定义终端显示的改动，应补充隔离环境冒烟或完整链路验证。
 
+## 上行指令验证（可验证后端）
+
+模拟器按 2027 通信协议（V1.0.0）下行数据，同时校验自定义终端的上行指令：
+
+- 下行口径：每方按 1/3/4/7 阵容发布 `robot_health`（8 项，己方在前）、
+  `robot_bullets`（仅己方 4 项）、`outpost_R_*` / `outpost_B_*`（固定红蓝身份）、
+  `total_CP_ally` / `total_CP_enemy`；雷达按“对方 1/3/4/7、己方 1/3/4/7”共 8 台发送。
+- 上行校验：topic 必须在 2027 指令表内；`CustomControl` ≤ 60 字节；
+  `KeyboardMouseControl`/`CustomControl` ≤ 75Hz；其余赛事指令 ≤ 10Hz。
+  2026 遗留的 `AirSupportCommand`、`HeroDeployModeEventCommand`、`MapClickInfoNotify`
+  会被订阅并标记为“未定义的上行 topic”。
+
+启动后直接查询：
+
+```bash
+curl -s http://127.0.0.1:8000/api/verify/summary | python3 -m json.tool
+curl -s -X POST http://127.0.0.1:8000/api/verify/reset
+```
+
+`summary` 返回 `counts`、`ratesHz`、`violations`、`pass` 与最近事件，`pass=false` 即表示
+本次联调中自定义终端存在协议外 topic、载荷超限或超频。验证器只记录，不修改比赛状态。
+
 ## 开发约束
 
 - `src/network/proto/robomaster.proto` 是唯一人工维护的 RoboMaster schema；模拟器 pb2 必须由它

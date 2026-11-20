@@ -220,16 +220,13 @@ class MatchSimulationEngineTest(unittest.TestCase):
 
         self.assertEqual(by_key["rune_metrics"]["team"], "blue")
         self.assertEqual(by_key["rune_metrics"]["target_team"], "blue")
-        self.assertEqual(by_key["air_support"]["team"], "red")
         self.assertEqual(
             state_manager.referee_info_by_team["blue"]["activated_arms"],
             4,
         )
-        self.assertEqual(state_manager.air_support["red_status"], 1)
-        self.assertEqual(state_manager.air_support["blue_status"], 0)
+        # 2027 规则取消空中支援，事件与状态不再由模拟器触发。
         labels = {event["key"]: event["label"] for event in frame["recent_events"]}
         self.assertIn("蓝方", labels["rune_metrics"])
-        self.assertIn("红方", labels["air_support"])
 
         self.clock.set(
             engine.COUNTDOWN_DURATION_SEC + battle_duration * 0.35
@@ -244,7 +241,7 @@ class MatchSimulationEngineTest(unittest.TestCase):
         )
         engine.tick()
         second_death = state_manager.get_state()["globalUnitStatus"]["robot_health"]
-        self.assertEqual(second_death[6], 0)  # 蓝方空中机器人被红方步兵击杀
+        self.assertEqual(second_death[5], 0)  # 蓝方步兵被红方步兵击杀
         self.assertNotEqual(second_death[2], 0)
 
     def test_outpost_stops_while_alive_then_is_destroyed_with_event_2(self):

@@ -227,6 +227,28 @@ socket_app = socketio.ASGIApp(sio, app)
 static_dir = os.path.join(os.path.dirname(__file__), "static")
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 video_resource_dir = os.path.join(project_root, "resources", "videos")
+@app.get("/api/verify/summary")
+async def verify_summary():
+    """
+    返回自定义终端上行指令的合规性摘要。
+
+    联调时用来判断：topic 是否属于 2027 指令表、CustomControl 是否超过
+    60 字节、键鼠/赛事指令的频率是否超限。
+    """
+    if mqtt_publisher is None or not hasattr(mqtt_publisher, "verifier"):
+        return {"available": False, "reason": "MQTT publisher 未启动"}
+    return mqtt_publisher.verifier.summary()
+
+
+@app.post("/api/verify/reset")
+async def verify_reset():
+    """清空验证统计，便于开始新一轮联调。"""
+    if mqtt_publisher is None or not hasattr(mqtt_publisher, "verifier"):
+        return {"ok": False, "reason": "MQTT publisher 未启动"}
+    mqtt_publisher.verifier.reset()
+    return {"ok": True}
+
+
 app.mount("/", StaticFiles(directory=static_dir, html=True), name="static")
 
 

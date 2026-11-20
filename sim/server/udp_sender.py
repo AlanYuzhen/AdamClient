@@ -141,7 +141,7 @@ class UDPSender:
         self._send_packet(protocol.CmdID.GAME_ROBOT_HP, data)
 
     def _send_robot_status(self, global_status):
-        robot_ids = list(getattr(self.state_manager, "robot_ids", [1, 3, 6, 7, 101, 103, 106, 107]))
+        robot_ids = list(getattr(self.state_manager, "robot_ids", [1, 3, 4, 7, 101, 103, 104, 107]))
         robot_health = list(global_status.get("robot_health", []))
         robot_max_hp = list(global_status.get("robot_max_hp", []))
         robot_level = list(global_status.get("robot_level", []))
@@ -171,7 +171,7 @@ class UDPSender:
             self._send_packet(protocol.CmdID.ROBOT_STATUS, data)
 
     def _send_power_heat(self, global_status):
-        robot_ids = list(getattr(self.state_manager, "robot_ids", [1, 3, 6, 7, 101, 103, 106, 107]))
+        robot_ids = list(getattr(self.state_manager, "robot_ids", [1, 3, 4, 7, 101, 103, 104, 107]))
         try:
             robot_index = robot_ids.index(int(self.current_robot_id))
         except ValueError:
@@ -227,7 +227,7 @@ class UDPSender:
     def _send_positions(self):
         # 0x0203 机器人位置：x、y、朝向和机器人编号。
         positions = self.state_manager.get_positions()
-        robot_ids = list(getattr(self.state_manager, "robot_ids", [1, 3, 6, 7, 101, 103, 106, 107]))
+        robot_ids = list(getattr(self.state_manager, "robot_ids", [1, 3, 4, 7, 101, 103, 104, 107]))
         for i, pos in enumerate(positions):
             robot_id = robot_ids[i] if i < len(robot_ids) else 1
 
