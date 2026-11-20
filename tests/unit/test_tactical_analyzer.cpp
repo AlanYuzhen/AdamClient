@@ -28,10 +28,10 @@ private slots:
         analyzer.setUseMockData(false);
         analyzer.analyze();
         const auto robots = analyzer.allyRobotList();
-        QCOMPARE(robots.size(), 5);
+        QCOMPARE(robots.size(), 4);
         QCOMPARE(robots[0].toMap().value("label").toString(), QStringLiteral("重型工程"));
         QCOMPARE(robots[1].toMap().value("hp").toInt(), 130);
-        QCOMPARE(robots[4].toMap().value("hp").toInt(), 170);
+        QCOMPARE(robots[3].toMap().value("hp").toInt(), 170);
         for (const auto &entry : robots) QVERIFY(entry.toMap().value("slot").toInt() != 2);
         robomaster::GlobalSpecialMechanism mechanisms;
         mechanisms.add_mechanism_id(3);
@@ -177,8 +177,8 @@ private slots:
         const QVariantList allyRobots = analyzer.allyRobotList();
         const QVariantList enemyRobots = analyzer.enemyRobotList();
 
-        QCOMPARE(allyRobots.size(), 5);
-        QCOMPARE(enemyRobots.size(), 5);
+        QCOMPARE(allyRobots.size(), 4);
+        QCOMPARE(enemyRobots.size(), 4);
 
         auto containsSlotFive = [](const QVariantList &robots) {
             for (const QVariant &entry : robots) {
@@ -191,6 +191,18 @@ private slots:
 
         QVERIFY(!containsSlotFive(allyRobots));
         QVERIFY(!containsSlotFive(enemyRobots));
+
+        // 2027 界面不再展示空中系统（6 号）。
+        auto containsSlotSix = [](const QVariantList &robots) {
+            for (const QVariant &entry : robots) {
+                if (entry.toMap().value("slot").toInt() == 6) {
+                    return true;
+                }
+            }
+            return false;
+        };
+        QVERIFY(!containsSlotSix(allyRobots));
+        QVERIFY(!containsSlotSix(enemyRobots));
     }
 
     void testRobotListsDefaultMaxHpToOneHundredFifty() {
@@ -202,8 +214,8 @@ private slots:
         const QVariantList allyRobots = analyzer.allyRobotList();
         const QVariantList enemyRobots = analyzer.enemyRobotList();
 
-        QCOMPARE(allyRobots.size(), 5);
-        QCOMPARE(enemyRobots.size(), 5);
+        QCOMPARE(allyRobots.size(), 4);
+        QCOMPARE(enemyRobots.size(), 4);
 
         for (const QVariant &entry : allyRobots) {
             const QVariantMap robot = entry.toMap();

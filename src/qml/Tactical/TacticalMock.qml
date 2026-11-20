@@ -79,7 +79,6 @@ QtObject {
             { id: "A1", label: "A1", x: 0.25, y: 0.55, angle: 45 },
             { id: "A3", label: "A3", x: 0.28, y: 0.48, angle: 30 },
             { id: "A4", label: "A4", x: 0.22, y: 0.42, angle: 0 },
-            { id: "A6", label: "A6", x: 0.38, y: 0.55, angle: 135 },
             { id: "A7", label: "A7", x: 0.42, y: 0.70, angle: 180 }
         ],
         enemyRobots: [

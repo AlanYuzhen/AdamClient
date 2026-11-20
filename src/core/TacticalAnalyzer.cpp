@@ -351,7 +351,6 @@ void TacticalAnalyzer::loadMockData() {
         ally.append(toVariantMap(MapRobot{"A1", "A1", 0.25, 0.55, 45}));
         ally.append(toVariantMap(MapRobot{"A3", "A3", 0.28, 0.48, 30}));
         ally.append(toVariantMap(MapRobot{"A4", "A4", 0.22, 0.42, 0}));
-        ally.append(toVariantMap(MapRobot{"A6", "A6", 0.38, 0.55, 135}));
         ally.append(toVariantMap(MapRobot{"A7", "A7", 0.42, 0.70, 180}));
         m_snapshot.radar.allyRobots = ally;
     }
@@ -408,7 +407,7 @@ void TacticalAnalyzer::loadMockData() {
     }
     m_snapshot.allyExecution = execs;
 
-    // 2026 阵容没有 5 号步兵，列表保留 1、2、3、4、6、7 号位。
+    // 列表只保留地面机器人：1、3、4、7 号位。
     m_snapshot.allyRobotList = QVariantList{
         QVariantMap{{"id", "A1"}, {"slot", 1}, {"team", "ally"}, {"type", "engineer"}, {"label", "重型工程"}, {"hp", 2580}, {"maxHp", 4000}, {"hpPct", 65}, {"heatPct", 30}, {"capPct", 85}, {"ammoPct", 70}, {"online", true}, {"alive", true}, {"stale", false}, {"ageMs", 120}},
         QVariantMap{{"id", "A3"}, {"slot", 3}, {"team", "ally"}, {"type", "infantry"}, {"label", "步兵3"}, {"hp", 320}, {"maxHp", 400}, {"hpPct", 80}, {"heatPct", 20}, {"capPct", 90}, {"ammoPct", 55}, {"online", true}, {"alive", true}, {"stale", false}, {"ageMs", 140}},
@@ -419,7 +418,6 @@ void TacticalAnalyzer::loadMockData() {
         QVariantMap{{"id", "E1"}, {"slot", 1}, {"team", "enemy"}, {"type", "engineer"}, {"label", "敌重型工程"}, {"hp", 680}, {"maxHp", 800}, {"hpPct", 85}, {"heatPct", -1}, {"capPct", -1}, {"ammoPct", -1}, {"online", true}, {"alive", true}, {"stale", false}, {"ageMs", 180}},
         QVariantMap{{"id", "E3"}, {"slot", 3}, {"team", "enemy"}, {"type", "infantry"}, {"label", "敌步兵3"}, {"hp", 84}, {"maxHp", 400}, {"hpPct", 21}, {"heatPct", -1}, {"capPct", -1}, {"ammoPct", -1}, {"online", true}, {"alive", true}, {"stale", false}, {"ageMs", 120}},
         QVariantMap{{"id", "E4"}, {"slot", 4}, {"team", "enemy"}, {"type", "infantry"}, {"label", "敌步兵4"}, {"hp", 220}, {"maxHp", 400}, {"hpPct", 55}, {"heatPct", -1}, {"capPct", -1}, {"ammoPct", -1}, {"online", true}, {"alive", true}, {"stale", false}, {"ageMs", 250}},
-        QVariantMap{{"id", "E6"}, {"slot", 6}, {"team", "enemy"}, {"type", "aerial"}, {"label", "敌空中"}, {"hp", 0}, {"maxHp", 300}, {"hpPct", 0}, {"heatPct", -1}, {"capPct", -1}, {"ammoPct", -1}, {"online", false}, {"alive", false}, {"stale", true}, {"ageMs", 999999}},
         QVariantMap{{"id", "E7"}, {"slot", 7}, {"team", "enemy"}, {"type", "sentry"}, {"label", "敌哨兵"}, {"hp", 520}, {"maxHp", 600}, {"hpPct", 87}, {"heatPct", -1}, {"capPct", -1}, {"ammoPct", -1}, {"online", true}, {"alive", true}, {"stale", false}, {"ageMs", 240}}
     };
     const int allyEconomy = 1280;
@@ -997,7 +995,8 @@ void TacticalAnalyzer::updateRobotLists() {
         m_robotFlashStateRound = currentRound;
     }
     const qint64 nowMs = QDateTime::currentMSecsSinceEpoch();
-    const QList<int> visibleSlots{1, 3, 4, 6, 7};
+    // 2027 界面不展示空中系统（6 号无 UWB、无全局血量）。
+    const QList<int> visibleSlots{1, 3, 4, 7};
     const QVariantMap commandHealth = m_gameData->command2027State().value("robotHealth").toMap();
 
     auto buildList = [&](bool redTeam, bool ally) {
