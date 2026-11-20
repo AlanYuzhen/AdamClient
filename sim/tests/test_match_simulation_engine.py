@@ -282,8 +282,9 @@ class MatchSimulationEngineTest(unittest.TestCase):
             self.engine.COUNTDOWN_DURATION_SEC + battle_duration * 0.85
         )
         red_state = self.state_manager.get_state()["globalUnitStatus"]
-        self.assertLess(red_state["red_base_health"], 5000)
-        self.assertEqual(red_state["blue_base_health"], 5000)
+        # 2027 规则：基地血量上限 10000。
+        self.assertLess(red_state["red_base_health"], 10000)
+        self.assertEqual(red_state["blue_base_health"], 10000)
 
         blue_state_manager = StateManager()
         blue_state_manager.current_robot_id = 101
@@ -300,8 +301,8 @@ class MatchSimulationEngineTest(unittest.TestCase):
         )
         blue_engine.tick()
         blue_state = blue_state_manager.get_state()["globalUnitStatus"]
-        self.assertLess(blue_state["blue_base_health"], 5000)
-        self.assertEqual(blue_state["red_base_health"], 5000)
+        self.assertLess(blue_state["blue_base_health"], 10000)
+        self.assertEqual(blue_state["red_base_health"], 10000)
 
     def test_events_cannot_bypass_disabled_hp_for_outpost_destruction(self):
         self.start(
@@ -314,7 +315,8 @@ class MatchSimulationEngineTest(unittest.TestCase):
         state = self.state_manager.get_state()["globalUnitStatus"]
         events = self.state_manager.get_events()
 
-        self.assertEqual(state["blue_outpost_health"], 1500)
+        # 2027 规则：前哨站血量上限 1000。
+        self.assertEqual(state["blue_outpost_health"], 1000)
         self.assertEqual(state["blue_outpost_status"], 2)
         self.assertFalse(state["blue_outpost_destroyed"])
         self.assertFalse(any(event.get("id") == 2 for event in events))

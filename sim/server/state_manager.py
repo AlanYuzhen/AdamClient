@@ -21,7 +21,7 @@ import threading
 from datetime import datetime
 
 class StateManager:
-    BASE_HP_MAX = 5000
+    BASE_HP_MAX = 10000
     BASE_HP_STEP = 50
     SCORE_MIN = 0
     SCORE_MAX = 999
@@ -410,20 +410,20 @@ class StateManager:
     @staticmethod
     def _create_global_unit_status_state():
         return {
-            "base_health": 5000,
+            "base_health": 10000,
             "base_status": 0,
             "base_shield": 1000,
-            "outpost_health": 1500,
+            "outpost_health": 1000,
             "outpost_status": 1,
             # --- 分队伍数据 ---
-            "red_base_health": 5000,
-            "blue_base_health": 5000,
+            "red_base_health": 10000,
+            "blue_base_health": 10000,
             "red_base_status": 0,
             "blue_base_status": 0,
             "red_base_shield": 1000,
             "blue_base_shield": 1000,
-            "red_outpost_health": 1500,
-            "blue_outpost_health": 1500,
+            "red_outpost_health": 1000,
+            "blue_outpost_health": 1000,
             "red_outpost_status": 1,
             "blue_outpost_status": 1,
             "red_outpost_destroyed": False,
@@ -1000,19 +1000,19 @@ class StateManager:
             self.global_unit_status["robot_power_over_limit"][i] = False
             self.global_unit_status["robot_level"][i] = 1
             self.global_unit_status["robot_power"][i] = 0
-        self.global_unit_status["base_health"] = 5000
+        self.global_unit_status["base_health"] = 10000
         self.global_unit_status["base_status"] = 0
         self.global_unit_status["base_shield"] = 1000
-        self.global_unit_status["outpost_health"] = 1500
+        self.global_unit_status["outpost_health"] = 1000
         self.global_unit_status["outpost_status"] = 1
-        self.global_unit_status["red_base_health"] = 5000
-        self.global_unit_status["blue_base_health"] = 5000
+        self.global_unit_status["red_base_health"] = 10000
+        self.global_unit_status["blue_base_health"] = 10000
         self.global_unit_status["red_base_status"] = 0
         self.global_unit_status["blue_base_status"] = 0
         self.global_unit_status["red_base_shield"] = 1000
         self.global_unit_status["blue_base_shield"] = 1000
-        self.global_unit_status["red_outpost_health"] = 1500
-        self.global_unit_status["blue_outpost_health"] = 1500
+        self.global_unit_status["red_outpost_health"] = 1000
+        self.global_unit_status["blue_outpost_health"] = 1000
         self.global_unit_status["red_outpost_status"] = 1
         self.global_unit_status["blue_outpost_status"] = 1
         self.global_unit_status["red_outpost_destroyed"] = False
@@ -1723,10 +1723,10 @@ class StateManager:
         with self.lock:
             team_name = self._normalize_team(team)
             if team_name == "blue":
-                current_hp = self.global_unit_status.get("blue_outpost_health", 1500)
+                current_hp = self.global_unit_status.get("blue_outpost_health", 1000)
             else:
-                current_hp = self.global_unit_status.get("red_outpost_health", 1500)
-            next_hp = max(0, min(1500, int(current_hp) + int(delta)))
+                current_hp = self.global_unit_status.get("red_outpost_health", 1000)
+            next_hp = max(0, min(1000, int(current_hp) + int(delta)))
             if team_name == "blue":
                 self.global_unit_status["blue_outpost_health"] = next_hp
                 self.global_unit_status["blue_outpost_destroyed"] = next_hp <= 0
@@ -2462,10 +2462,10 @@ class StateManager:
 
             structure = dict(structure_health or {})
             if structure:
-                red_outpost = max(0, int(structure.get("red_outpost_health", 1500)))
-                blue_outpost = max(0, int(structure.get("blue_outpost_health", 1500)))
-                red_base = max(0, int(structure.get("red_base_health", 5000)))
-                blue_base = max(0, int(structure.get("blue_base_health", 5000)))
+                red_outpost = max(0, int(structure.get("red_outpost_health", 1000)))
+                blue_outpost = max(0, int(structure.get("blue_outpost_health", 1000)))
+                red_base = max(0, int(structure.get("red_base_health", 10000)))
+                blue_base = max(0, int(structure.get("blue_base_health", 10000)))
                 red_outpost_status = max(
                     0,
                     int(

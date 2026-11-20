@@ -837,16 +837,16 @@ class MQTTPublisher:
 
         status = state.get("globalUnitStatus", {})
         red_outpost_health = int(
-            status.get("red_outpost_health", status.get("outpost_health", 1500))
+            status.get("red_outpost_health", status.get("outpost_health", 1000))
         )
         red_base_health = int(
-            status.get("red_base_health", status.get("base_health", 5000))
+            status.get("red_base_health", status.get("base_health", 10000))
         )
         blue_outpost_health = int(
-            status.get("blue_outpost_health", status.get("outpost_health", 1500))
+            status.get("blue_outpost_health", status.get("outpost_health", 1000))
         )
         blue_base_health = int(
-            status.get("blue_base_health", status.get("base_health", 5000))
+            status.get("blue_base_health", status.get("base_health", 10000))
         )
         # 直接使用设置的outpost_status，而不是根据血量计算
         red_outpost_status = int(

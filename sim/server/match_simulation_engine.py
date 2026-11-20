@@ -538,13 +538,13 @@ class MatchSimulationEngine:
         own_team = self._operator_team
         enemy_team = "red" if own_team == "blue" else "blue"
 
-        outpost_health = {"red": 1500, "blue": 1500}
+        outpost_health = {"red": 1000, "blue": 1000}
         outpost_status = {"red": 1, "blue": 1}
-        base_health = {"red": 5000, "blue": 5000}
+        base_health = {"red": 10000, "blue": 10000}
 
         if battle_progress > 0.48:
-            enemy_damage = int((battle_progress - 0.48) * (1500.0 / 0.28))
-            outpost_health[enemy_team] = max(0, 1500 - enemy_damage)
+            enemy_damage = int((battle_progress - 0.48) * (1000.0 / 0.28))
+            outpost_health[enemy_team] = max(0, 1000 - enemy_damage)
         if battle_progress >= 0.76:
             outpost_health[enemy_team] = 0
             outpost_status[enemy_team] = 3
@@ -553,18 +553,18 @@ class MatchSimulationEngine:
 
         if battle_progress > 0.70:
             outpost_health[own_team] = max(
-                900,
-                1500 - int((battle_progress - 0.70) * 2000),
+                600,
+                1000 - int((battle_progress - 0.70) * 1400),
             )
         if battle_progress > 0.82:
             base_health[own_team] = max(
-                3400,
-                5000 - int((battle_progress - 0.82) * 9000),
+                6800,
+                10000 - int((battle_progress - 0.82) * 18000),
             )
         if battle_progress > 0.88:
             base_health[enemy_team] = max(
-                2600,
-                5000 - int((battle_progress - 0.88) * 12000),
+                5200,
+                10000 - int((battle_progress - 0.88) * 24000),
             )
         return {
             "red_outpost_health": outpost_health["red"],

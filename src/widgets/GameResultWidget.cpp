@@ -419,10 +419,10 @@ void GameResultWidget::drawStatsComparison(QPainter& painter)
     QString energyIcon = ":/images/message/validate_icon_rune.png";
 
     // 2. 基地血量
-    drawStatRow(painter, startY , "基地血量", m_redBaseHP, m_blueBaseHP, 5000, hpIcon);
+    drawStatRow(painter, startY , "基地血量", m_redBaseHP, m_blueBaseHP, 10000, hpIcon);
 
     // 3. 前哨站血量
-    drawStatRow(painter, startY + rowHeight, "前哨站血量", m_redOutpostHP, m_blueOutpostHP, 1500, hpIcon);
+    drawStatRow(painter, startY + rowHeight, "前哨站血量", m_redOutpostHP, m_blueOutpostHP, 1000, hpIcon);
 
     // 4. 哨兵血量
     drawStatRow(painter, startY + rowHeight * 2, "哨兵血量", m_redSentryHP, m_blueSentryHP, 600, hpIcon);

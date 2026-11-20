@@ -17,10 +17,10 @@ QtObject {
     })
 
     property var resourceData: ({
-        allyBaseHp: 3200, allyBaseMax: 5000,
-        enemyBaseHp: 4100, enemyBaseMax: 5000,
-        allyOutpostHp: 420, allyOutpostMax: 1500,
-        enemyOutpostHp: 780, enemyOutpostMax: 1500,
+        allyBaseHp: 7200, allyBaseMax: 10000,
+        enemyBaseHp: 8100, enemyBaseMax: 10000,
+        allyOutpostHp: 620, allyOutpostMax: 1000,
+        enemyOutpostHp: 780, enemyOutpostMax: 1000,
         allyOutpostDestroyed: false, enemyOutpostDestroyed: false,
         allyBaseInvincible: true, enemyBaseInvincible: true,
         allyDefenseBonus: 0, enemyDefenseBonus: 0,

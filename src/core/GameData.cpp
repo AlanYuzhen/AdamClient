@@ -460,24 +460,24 @@ GameData::GameData(QObject *parent)
 
   // 初始化基地数据
   m_redBase.team = TeamColor::RED;
-  m_redBase.currentHP = 5000;
-  m_redBase.maxHP = 5000;
+  m_redBase.currentHP = RM::Base::MAX_HP;
+  m_redBase.maxHP = RM::Base::MAX_HP;
 
   m_blueBase.team = TeamColor::BLUE;
-  m_blueBase.currentHP = 5000;
-  m_blueBase.maxHP = 5000;
+  m_blueBase.currentHP = RM::Base::MAX_HP;
+  m_blueBase.maxHP = RM::Base::MAX_HP;
 
   m_totalKills = 0;
 
   // 初始化前哨站数据
   m_redOutpostData.team = TeamColor::RED;
-  m_redOutpostData.currentHP = 1500;
-  m_redOutpostData.maxHP = 1500;
+  m_redOutpostData.currentHP = RM::Outpost::MAX_HP;
+  m_redOutpostData.maxHP = RM::Outpost::MAX_HP;
   m_redOutpostData.isDestroyed = false;
 
   m_blueOutpostData.team = TeamColor::BLUE;
-  m_blueOutpostData.currentHP = 1500;
-  m_blueOutpostData.maxHP = 1500;
+  m_blueOutpostData.currentHP = RM::Outpost::MAX_HP;
+  m_blueOutpostData.maxHP = RM::Outpost::MAX_HP;
   m_blueOutpostData.isDestroyed = false;
 
   // 初始化比赛状态
@@ -1161,6 +1161,11 @@ QVariantMap GameData::getRobotInfo(int robotId) const {
     const int panelHp = static_cast<int>(robotDisplayHpForPanels(*robot));
     const int panelMaxHp = static_cast<int>(robotDisplayMaxHpForPanels(*robot));
     const int panelLevel = static_cast<int>(robotDisplayLevelForPanels(*robot));
+    // 2027：空中系统没有 UWB 定位，也不在 GlobalUnitStatus 的血量列表里。
+    // 只有本机动态数据（RobotDynamicStatus）或全局快照能给出真实血量时才显示数值。
+    const bool panelHpKnown =
+        robot->type != RobotType::AERIAL || robot->hasTabGlobalSnapshot ||
+        robot->currentHP > 0;
     // 基础血量
     map["robotId"] = robot->robotId;
     map["hp"] = robot->currentHP;
@@ -1215,8 +1220,9 @@ QVariantMap GameData::getRobotInfo(int robotId) const {
     map["panelMaxHp"] = panelMaxHp;
     map["panelIsConnected"] = panelConnected;
     map["panelIsOffline"] = !panelConnected;
-    map["panelIsDead"] = panelConnected && panelHp <= 0;
+    map["panelIsDead"] = panelConnected && panelHpKnown && panelHp <= 0;
     map["panelLevel"] = panelLevel;
+    map["panelHpKnown"] = panelHpKnown;
   } else {
     map["hp"] = 0;
     map["robotId"] = m_currentRobotId;
@@ -1260,6 +1266,7 @@ QVariantMap GameData::getRobotInfo(int robotId) const {
     map["panelIsOffline"] = true;
     map["panelIsDead"] = false;
     map["panelLevel"] = 0;
+    map["panelHpKnown"] = false;
   }
   return map;
 }
@@ -1389,7 +1396,7 @@ QVariantList GameData::getRedRobotsDataQml() const {
     case RobotType::ENGINEER: return "工程";
     case RobotType::INFANTRY_3:
     case RobotType::INFANTRY_4: return "步兵";
-    case RobotType::AERIAL: return "空中";
+    case RobotType::AERIAL: return "空中系统";
     case RobotType::SENTRY: return "哨兵";
     default: return "机器人";
     }
@@ -1445,7 +1452,7 @@ QVariantList GameData::getBlueRobotsDataQml() const {
     case RobotType::ENGINEER: return "工程";
     case RobotType::INFANTRY_3:
     case RobotType::INFANTRY_4:return "步兵";
-    case RobotType::AERIAL: return "空中";
+    case RobotType::AERIAL: return "空中系统";
     case RobotType::SENTRY: return "哨兵";
     default: return "机器人";
     }
@@ -4233,7 +4240,7 @@ static QString getRobotName(int robotId) {
         case 3: return "步兵3";
         case 4: return "步兵4";
         case 5: return "步兵5";
-        case 6: return "空中";
+        case 6: return "空中系统";
         case 7: return "哨兵";
         case 8: return "飞镖";
         case 9: return "雷达";

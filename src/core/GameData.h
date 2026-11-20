@@ -337,7 +337,7 @@ struct BaseData {
   QDateTime lastUpdateTime; // 最后更新时间
 
   BaseData()
-      : team(TeamColor::RED), currentHP(5000), maxHP(5000), virtualShield(0),
+      : team(TeamColor::RED), currentHP(10000), maxHP(10000), virtualShield(0),
         isInvincible(true), status(0) {}
 };
 
@@ -347,7 +347,7 @@ struct BaseData {
  */
 struct OutpostData {
   TeamColor team;           // 所属队伍颜色
-  quint16 currentHP;        // 当前血量 (0-1500)
+  quint16 currentHP;        // 当前血量 (0-1000)
   quint16 maxHP;            // 最大血量
   bool isDestroyed;         // 是否已被摧毁
   quint8 status;            // 前哨站状态 (0-2:存活, 3:不可重建, 4:可重建, 5:重建中)
@@ -356,7 +356,7 @@ struct OutpostData {
   QDateTime lastUpdateTime; // 最后更新时间
 
   OutpostData()
-      : team(TeamColor::RED), currentHP(1500), maxHP(1500), isDestroyed(false),
+      : team(TeamColor::RED), currentHP(1000), maxHP(1000), isDestroyed(false),
         status(0), rebuildCount(2), maxRebuildCount(2) {
   }
 };

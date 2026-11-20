@@ -9,8 +9,8 @@ Item {
     readonly property real contentScale: Math.min(width / 92, height / 52)
 
     property bool isBlue: false
-    property int hp: 1500
-    property int maxHp: 1500
+    property int hp: 1000
+    property int maxHp: 1000
     property int rebuildCount: 2
     property int maxRebuildCount: 2
     readonly property bool destroyed: hp <= 0

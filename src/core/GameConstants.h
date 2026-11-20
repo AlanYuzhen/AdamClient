@@ -32,8 +32,8 @@ constexpr int UPDATE_INTERVAL_MS = 100;     // 定时器更新间隔 (ms)
  * @brief 基地相关常量
  */
 namespace Base {
-constexpr int DEFAULT_HP = 5000; // 基地默认血量
-constexpr int MAX_HP = 5000;     // 基地最大血量
+constexpr int DEFAULT_HP = 10000; // 基地默认血量（2027 规则 5.6.1）
+constexpr int MAX_HP = 10000;     // 基地最大血量
 constexpr int SHIELD_HP = 2000;  // 虚拟护盾血量
 } // namespace Base
 
@@ -41,8 +41,10 @@ constexpr int SHIELD_HP = 2000;  // 虚拟护盾血量
  * @brief 前哨站相关常量
  */
 namespace Outpost {
-constexpr int DEFAULT_HP = 1500; // 前哨站默认血量
-constexpr int MAX_HP = 1500;     // 前哨站最大血量
+constexpr int DEFAULT_HP = 1000; // 前哨站默认血量（2027 规则 5.6.1）
+constexpr int MAX_HP = 1000;     // 前哨站最大血量
+// 前哨站被击毁后由对方重建时只有 500 点血量（2027 规则 5.6.1）。
+constexpr int REBUILD_HP = 500;
 constexpr int HEALTH_DROP_ALERT_WINDOW_MS = 5000;
 constexpr int HEALTH_DROP_ALERT_SAMPLE_RETENTION_MS =
     HEALTH_DROP_ALERT_WINDOW_MS + 1000;

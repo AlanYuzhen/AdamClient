@@ -6,9 +6,9 @@ Item {
 
     property bool enemy: false
     property int hp: 0
-    property int maxHp: 5000
+    property int maxHp: 10000
     property int outpostHp: 0
-    property int outpostMax: 1500
+    property int outpostMax: 1000
     property bool outpostDestroyed: outpostHp <= 0
     property bool invincible: false
     property int defenseBonus: 0

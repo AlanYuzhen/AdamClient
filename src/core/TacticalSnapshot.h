@@ -65,13 +65,13 @@ public:
     Q_PROPERTY(int hpDiff MEMBER hpDiff)
 
     int allyBaseHp = 0;
-    int allyBaseMax = 5000;
+    int allyBaseMax = 10000;
     int enemyBaseHp = 0;
-    int enemyBaseMax = 5000;
+    int enemyBaseMax = 10000;
     int allyOutpostHp = 0;
-    int allyOutpostMax = 1500;
+    int allyOutpostMax = 1000;
     int enemyOutpostHp = 0;
-    int enemyOutpostMax = 1500;
+    int enemyOutpostMax = 1000;
     bool allyOutpostDestroyed = false;
     bool enemyOutpostDestroyed = false;
     bool allyBaseInvincible = false;

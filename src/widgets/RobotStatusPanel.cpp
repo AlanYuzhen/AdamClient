@@ -250,7 +250,7 @@ QString RobotStatusPanel::getRobotTypeName() const {
   case RobotType::Engineer:
     return "工程";
   case RobotType::Aerial:
-    return "空中";
+    return "空中系统";
   case RobotType::Sentry:
     return "哨兵";
   case RobotType::Dart:

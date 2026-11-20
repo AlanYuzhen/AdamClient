@@ -68,7 +68,7 @@ QString tacticalRobotTypeLabel(RobotType type, int slot) {
     case RobotType::ENGINEER:
         return QStringLiteral("工程");
     case RobotType::AERIAL:
-        return QStringLiteral("空中");
+        return QStringLiteral("空中系统");
     case RobotType::SENTRY:
         return QStringLiteral("哨兵");
     case RobotType::INFANTRY_3:
@@ -252,13 +252,13 @@ void TacticalAnalyzer::loadMockData() {
 
     // 资源
     m_snapshot.resources.allyBaseHp = 3200;
-    m_snapshot.resources.allyBaseMax = 5000;
+    m_snapshot.resources.allyBaseMax = 10000;
     m_snapshot.resources.enemyBaseHp = 4100;
-    m_snapshot.resources.enemyBaseMax = 5000;
+    m_snapshot.resources.enemyBaseMax = 10000;
     m_snapshot.resources.allyOutpostHp = 420;
-    m_snapshot.resources.allyOutpostMax = 1500;
+    m_snapshot.resources.allyOutpostMax = 1000;
     m_snapshot.resources.enemyOutpostHp = 780;
-    m_snapshot.resources.enemyOutpostMax = 1500;
+    m_snapshot.resources.enemyOutpostMax = 1000;
     m_snapshot.resources.allyOutpostDestroyed = false;
     m_snapshot.resources.enemyOutpostDestroyed = false;
     m_snapshot.resources.economyDiff = -350;
@@ -413,7 +413,7 @@ void TacticalAnalyzer::loadMockData() {
         QVariantMap{{"id", "A1"}, {"slot", 1}, {"team", "ally"}, {"type", "engineer"}, {"label", "重型工程"}, {"hp", 2580}, {"maxHp", 4000}, {"hpPct", 65}, {"heatPct", 30}, {"capPct", 85}, {"ammoPct", 70}, {"online", true}, {"alive", true}, {"stale", false}, {"ageMs", 120}},
         QVariantMap{{"id", "A3"}, {"slot", 3}, {"team", "ally"}, {"type", "infantry"}, {"label", "步兵3"}, {"hp", 320}, {"maxHp", 400}, {"hpPct", 80}, {"heatPct", 20}, {"capPct", 90}, {"ammoPct", 55}, {"online", true}, {"alive", true}, {"stale", false}, {"ageMs", 140}},
         QVariantMap{{"id", "A4"}, {"slot", 4}, {"team", "ally"}, {"type", "infantry"}, {"label", "步兵4"}, {"hp", 0}, {"maxHp", 400}, {"hpPct", 0}, {"heatPct", -1}, {"capPct", -1}, {"ammoPct", -1}, {"online", false}, {"alive", false}, {"stale", true}, {"ageMs", 999999}},
-        QVariantMap{{"id", "A6"}, {"slot", 6}, {"team", "ally"}, {"type", "aerial"}, {"label", "空中"}, {"hp", 210}, {"maxHp", 300}, {"hpPct", 70}, {"heatPct", -1}, {"capPct", -1}, {"ammoPct", 80}, {"online", true}, {"alive", true}, {"stale", false}, {"ageMs", 210}},
+        QVariantMap{{"id", "A6"}, {"slot", 6}, {"team", "ally"}, {"type", "aerial"}, {"label", "空中系统"}, {"hp", 210}, {"maxHp", 300}, {"hpPct", 70}, {"heatPct", -1}, {"capPct", -1}, {"ammoPct", 80}, {"online", true}, {"alive", true}, {"stale", false}, {"ageMs", 210}},
         QVariantMap{{"id", "A7"}, {"slot", 7}, {"team", "ally"}, {"type", "sentry"}, {"label", "哨兵"}, {"hp", 560}, {"maxHp", 600}, {"hpPct", 93}, {"heatPct", 0}, {"capPct", 100}, {"ammoPct", 80}, {"online", true}, {"alive", true}, {"stale", false}, {"ageMs", 170}}
     };
     m_snapshot.enemyRobotList = QVariantList{
