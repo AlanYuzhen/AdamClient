@@ -1161,11 +1161,6 @@ QVariantMap GameData::getRobotInfo(int robotId) const {
     const int panelHp = static_cast<int>(robotDisplayHpForPanels(*robot));
     const int panelMaxHp = static_cast<int>(robotDisplayMaxHpForPanels(*robot));
     const int panelLevel = static_cast<int>(robotDisplayLevelForPanels(*robot));
-    // 2027：空中系统没有 UWB 定位，也不在 GlobalUnitStatus 的血量列表里。
-    // 只有本机动态数据（RobotDynamicStatus）或全局快照能给出真实血量时才显示数值。
-    const bool panelHpKnown =
-        robot->type != RobotType::AERIAL || robot->hasTabGlobalSnapshot ||
-        robot->currentHP > 0;
     // 基础血量
     map["robotId"] = robot->robotId;
     map["hp"] = robot->currentHP;
@@ -1220,9 +1215,8 @@ QVariantMap GameData::getRobotInfo(int robotId) const {
     map["panelMaxHp"] = panelMaxHp;
     map["panelIsConnected"] = panelConnected;
     map["panelIsOffline"] = !panelConnected;
-    map["panelIsDead"] = panelConnected && panelHpKnown && panelHp <= 0;
+    map["panelIsDead"] = panelConnected && panelHp <= 0;
     map["panelLevel"] = panelLevel;
-    map["panelHpKnown"] = panelHpKnown;
   } else {
     map["hp"] = 0;
     map["robotId"] = m_currentRobotId;
@@ -1266,7 +1260,6 @@ QVariantMap GameData::getRobotInfo(int robotId) const {
     map["panelIsOffline"] = true;
     map["panelIsDead"] = false;
     map["panelLevel"] = 0;
-    map["panelHpKnown"] = false;
   }
   return map;
 }

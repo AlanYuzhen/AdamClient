@@ -152,8 +152,6 @@ QString settingsRobotTypeLabelForNormalizedId(int robotId) {
     return QStringLiteral("R4 - Standard");
   case 5:
     return QStringLiteral("R5 - Standard");
-  case 6:
-    return QStringLiteral("R6 - Aerial");
   case 7:
     return QStringLiteral("R7 - Sentry");
   default:
@@ -486,8 +484,6 @@ QString MainWindow::paidRespawnSoundFileName(int robotId) {
     return QStringLiteral("enemy_buyback_infantry_3_revived.mp3");
   case 4:
     return QStringLiteral("enemy_buyback_infantry_4_revived.mp3");
-  case 6:
-    return QStringLiteral("enemy_buyback_aerial_revived.mp3");
   case 7:
     return QStringLiteral("enemy_buyback_sentry_revived.mp3");
   default:
@@ -1098,44 +1094,6 @@ void MainWindow::setupConnections() {
           });
 
   // --- 网络调试日志 ---
-  connect(m_gameData, &GameData::airSupportStarted, this,
-          [this](bool isRedTeam) {
-            if (m_battleMessage) {
-              m_battleMessage->showAirSupportStarted(isRedTeam);
-            }
-          });
-  connect(m_gameData, &GameData::airSupportTargetingStateChanged, this,
-          [this](bool targeted) {
-            if (targeted) {
-              playSoundFromResourceFolder(
-                  QStringLiteral("air_support_laser_targeted.mp3"));
-            }
-
-            if (!m_qmlEventMessagePanel) {
-              return;
-            }
-
-            const int displayToken =
-                m_qmlEventMessagePanel->property("displayToken").toInt() + 1;
-            m_qmlEventMessagePanel->setProperty("displayToken", displayToken);
-
-            QObject *rootObject = m_qmlEventMessagePanel->rootObject();
-            if (targeted) {
-              if (rootObject) {
-                rootObject->setProperty("panelMode", "laserTargeted");
-              }
-              m_qmlEventMessagePanel->show();
-              m_qmlEventMessagePanel->raise();
-            } else if (!rootObject ||
-                       rootObject->property("panelMode").toString() ==
-                           QStringLiteral("laserTargeted")) {
-              m_qmlEventMessagePanel->hide();
-            }
-          });
-  connect(m_gameData, &GameData::airSupportCountered, this,
-          [this](const QString &soundSelector) {
-            playSecondarySound(event8CounteredSoundFile(soundSelector));
-          });
   connect(m_gameData, &GameData::dartGateOpened, this,
           [this](bool isRedTeam, bool isEnemyTeam) {
             if (m_battleMessage) {
@@ -2379,7 +2337,7 @@ void MainWindow::createCenterArea() {
   }
   m_qmlEventMessagePanel->hide();
 
-  // 2.6.1 空中机器人官方事件提示（战术屏风格）
+  // 2.6.1 官方事件提示（战术屏风格）
   m_qmlOfficialEventPopupPanel = new QQuickWidget(m_centralWidget);
   m_qmlOfficialEventPopupPanel->setObjectName(
       QStringLiteral("officialEventPopupWidget"));
@@ -4466,7 +4424,6 @@ void MainWindow::updateHeroVideoWidgetGeometry() {
   }
 }
 
-//处理空中支援中断快捷键
 bool MainWindow::tryHandleRuneHoldShortcut() {
   if (!m_qmlRunePanel || !m_gameData) {
     return false;
@@ -7131,7 +7088,7 @@ void MainWindow::keyPressEvent(QKeyEvent *event) {
           m_battleMessage->showBaseStatusChange(false, 2);
       }
     } else {
-      //  K 交由 QML 内部署逻辑处理（长按进入部署）
+      //  K 键交给系统默认处理
       QMainWindow::keyPressEvent(event);
       return;
     }
@@ -7139,7 +7096,7 @@ void MainWindow::keyPressEvent(QKeyEvent *event) {
 
   case Qt::Key_L: {
     if (!(event->modifiers() & Qt::ControlModifier)) {
-      // 2) 空中机器人：L 键触发飞镖发射
+      // L 键触发飞镖发射（Silo 面板）
       if (invokeSiloMethod("requestFire")) {
         break;
       }
@@ -7357,7 +7314,7 @@ void MainWindow::keyPressEvent(QKeyEvent *event) {
           QMap<int, GameResultWidget::RobotStats> redRobots;
           QMap<int, GameResultWidget::RobotStats> blueRobots;
 
-          // 红方机器人：1 英雄、2 工程、3/4/5 步兵、6 空中、7 哨兵。
+          // 红方机器人：1 英雄、2 工程、3/4/5 步兵、7 哨兵。
           auto addRobot = [](QMap<int, GameResultWidget::RobotStats> &map,
                              int id, int hp, int maxHp, int damage) {
             GameResultWidget::RobotStats s;
@@ -7372,14 +7329,12 @@ void MainWindow::keyPressEvent(QKeyEvent *event) {
           addRobot(redRobots, 3, 647, 600, 647);    // 步兵
           addRobot(redRobots, 4, 697, 600, 697);    // 步兵
           addRobot(redRobots, 5, 600, 600, 450);    // 步兵
-          addRobot(redRobots, 6, 0, 300, 120);      // 空中机器人，已阵亡
           addRobot(redRobots, 7, 864, 600, 864);    // 哨兵
 
           addRobot(blueRobots, 101, 2453, 4000, 232); // 英雄
           addRobot(blueRobots, 103, 0, 600, 783);     // 步兵，已阵亡
           addRobot(blueRobots, 104, 344, 600, 1382);  // 步兵
           addRobot(blueRobots, 105, 0, 600, 400);     // 步兵，已阵亡
-          addRobot(blueRobots, 106, 0, 300, 120);     // 空中机器人，已阵亡
           addRobot(blueRobots, 107, 1617, 600,
                    836); // 哨兵，测试数据使用增强血量
 

@@ -100,7 +100,6 @@ QtObject {
         { id: "A1", slot: 1, team: "ally", type: "engineer", label: "重型工程", hp: 2580, maxHp: 4000, hpPct: 65, heatPct: 30, capPct: 85, ammoPct: 70, online: true, alive: true, stale: false, ageMs: 120 },
         { id: "A3", slot: 3, team: "ally", type: "infantry", label: "步兵3", hp: 320, maxHp: 400, hpPct: 80, heatPct: 20, capPct: 90, ammoPct: 55, online: true, alive: true, stale: false, ageMs: 140 },
         { id: "A4", slot: 4, team: "ally", type: "infantry", label: "步兵4", hp: 0, maxHp: 400, hpPct: 0, heatPct: -1, capPct: -1, ammoPct: -1, online: false, alive: false, stale: true, ageMs: 999999 },
-        { id: "A6", slot: 6, team: "ally", type: "aerial", label: "空中", hp: 210, maxHp: 300, hpPct: 70, heatPct: -1, capPct: -1, ammoPct: 80, online: true, alive: true, stale: false, ageMs: 210 },
         { id: "A7", slot: 7, team: "ally", type: "sentry", label: "哨兵", hp: 560, maxHp: 600, hpPct: 93, heatPct: 0, capPct: 100, ammoPct: 80, online: true, alive: true, stale: false, ageMs: 170 }
     ])
 
@@ -108,7 +107,6 @@ QtObject {
         { id: "E1", slot: 1, team: "enemy", type: "engineer", label: "敌重型工程", hp: 680, maxHp: 800, hpPct: 85, heatPct: -1, capPct: -1, ammoPct: -1, online: true, alive: true, stale: false, ageMs: 180 },
         { id: "E3", slot: 3, team: "enemy", type: "infantry", label: "敌步兵3", hp: 84, maxHp: 400, hpPct: 21, heatPct: -1, capPct: -1, ammoPct: -1, online: true, alive: true, stale: false, ageMs: 120 },
         { id: "E4", slot: 4, team: "enemy", type: "infantry", label: "敌步兵4", hp: 220, maxHp: 400, hpPct: 55, heatPct: -1, capPct: -1, ammoPct: -1, online: true, alive: true, stale: false, ageMs: 250 },
-        { id: "E6", slot: 6, team: "enemy", type: "aerial", label: "敌空中", hp: 0, maxHp: 300, hpPct: 0, heatPct: -1, capPct: -1, ammoPct: -1, online: false, alive: false, stale: true, ageMs: 999999 },
         { id: "E7", slot: 7, team: "enemy", type: "sentry", label: "敌哨兵", hp: 520, maxHp: 600, hpPct: 87, heatPct: -1, capPct: -1, ammoPct: -1, online: true, alive: true, stale: false, ageMs: 240 }
     ])
 

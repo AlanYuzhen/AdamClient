@@ -413,7 +413,6 @@ void TacticalAnalyzer::loadMockData() {
         QVariantMap{{"id", "A1"}, {"slot", 1}, {"team", "ally"}, {"type", "engineer"}, {"label", "重型工程"}, {"hp", 2580}, {"maxHp", 4000}, {"hpPct", 65}, {"heatPct", 30}, {"capPct", 85}, {"ammoPct", 70}, {"online", true}, {"alive", true}, {"stale", false}, {"ageMs", 120}},
         QVariantMap{{"id", "A3"}, {"slot", 3}, {"team", "ally"}, {"type", "infantry"}, {"label", "步兵3"}, {"hp", 320}, {"maxHp", 400}, {"hpPct", 80}, {"heatPct", 20}, {"capPct", 90}, {"ammoPct", 55}, {"online", true}, {"alive", true}, {"stale", false}, {"ageMs", 140}},
         QVariantMap{{"id", "A4"}, {"slot", 4}, {"team", "ally"}, {"type", "infantry"}, {"label", "步兵4"}, {"hp", 0}, {"maxHp", 400}, {"hpPct", 0}, {"heatPct", -1}, {"capPct", -1}, {"ammoPct", -1}, {"online", false}, {"alive", false}, {"stale", true}, {"ageMs", 999999}},
-        QVariantMap{{"id", "A6"}, {"slot", 6}, {"team", "ally"}, {"type", "aerial"}, {"label", "空中系统"}, {"hp", 210}, {"maxHp", 300}, {"hpPct", 70}, {"heatPct", -1}, {"capPct", -1}, {"ammoPct", 80}, {"online", true}, {"alive", true}, {"stale", false}, {"ageMs", 210}},
         QVariantMap{{"id", "A7"}, {"slot", 7}, {"team", "ally"}, {"type", "sentry"}, {"label", "哨兵"}, {"hp", 560}, {"maxHp", 600}, {"hpPct", 93}, {"heatPct", 0}, {"capPct", 100}, {"ammoPct", 80}, {"online", true}, {"alive", true}, {"stale", false}, {"ageMs", 170}}
     };
     m_snapshot.enemyRobotList = QVariantList{

@@ -40,8 +40,6 @@ Item {
             return "hero";
         case 2:
             return "engineer";
-        case 6:
-            return "aerial";
         default:
             return "infantry";
         }
@@ -49,22 +47,15 @@ Item {
     property int currentExp: gameDataContext ? gameDataContext.currentExp : 90
     property int maxExp: gameDataContext ? gameDataContext.maxExp : 100
     property bool isRed: (robotId < 100)
-    property bool isAerialRobot: displayRobotId === 6
     property int yellowCardCount: gameDataContext ? gameDataContext.yellowCardCount : 0
     property string outOfCombatStatus: gameDataContext ? gameDataContext.outOfCombatStatus : "已脱战"
 
     property string chassisStatus: gameDataContext && gameDataContext.chassisStatus !== "" ? gameDataContext.chassisStatus : ""
     property bool chassisOverPowerCut: chassisStatus.indexOf("超限断电") === 0 //超限断电提示
     property bool isOutOfCombat: gameDataContext ? gameDataContext.isOutOfCombat : true
-    readonly property real statsLeftMargin: root.isAerialRobot ? root.width * -0.03 : root.width * -0.10
-    readonly property real statsVerticalOffset: root.isAerialRobot ? root.height * 0.02 : root.height * 0.08
-    readonly property real hpBarTopMargin: root.isAerialRobot ? root.height * 0.11 : root.height * 0.18
-    property int aerialHealthSegments: {
-        var estimatedSegments = Math.round(Math.max(1, maxHP) / 30);
-        return Math.max(15, Math.min(15, estimatedSegments));
-    }
-    property color aerialHealthActiveColor: healthRatio <= 0.20 ? "#FF8A8A" : "#FFFFFF"
-    property color aerialHealthInactiveColor: Qt.rgba(1, 1, 1, 0.18)
+    readonly property real statsLeftMargin: root.width * -0.10
+    readonly property real statsVerticalOffset: root.height * 0.08
+    readonly property real hpBarTopMargin: root.height * 0.18
 
 
 
@@ -174,65 +165,6 @@ Item {
             anchors.centerIn: parent
             fillMode: Image.PreserveAspectFit
             source: parent.iconSource
-        }
-    }
-
-    component AerialHealthDart: Item {
-        property bool active: false
-        property color strokeColor: "#FFFFFF"
-        property color inactiveStrokeColor: Qt.rgba(1, 1, 1, 0.18)
-
-        clip: false
-        rotation: 30
-
-        Canvas {
-            width: parent.width
-            height: parent.height * 1.5
-            x: 0
-            y: parent.height * 0.02
-            antialiasing: true
-
-            onPaint: {
-                var ctx = getContext("2d");
-                var w = width;
-                var h = height;
-                var outlineColor = parent.active ? parent.strokeColor : parent.inactiveStrokeColor;
-                var lineWidth = Math.max(1.0, Math.min(w, h) * 0.12);
-
-                function traceDartPath() {
-                    ctx.beginPath();
-                    ctx.moveTo(w * 0.50, 0);
-                    ctx.quadraticCurveTo(w * 0.88, h * 0.10, w * 0.84, h * 0.28);
-                    ctx.lineTo(w * 0.84, h * 0.84);
-                    ctx.quadraticCurveTo(w * 0.84, h, w * 0.66, h);
-                    ctx.lineTo(w * 0.34, h);
-                    ctx.quadraticCurveTo(w * 0.16, h, w * 0.16, h * 0.84);
-                    ctx.lineTo(w * 0.16, h * 0.28);
-                    ctx.quadraticCurveTo(w * 0.12, h * 0.10, w * 0.50, 0);
-                    ctx.closePath();
-                }
-
-                ctx.reset();
-                ctx.clearRect(0, 0, w, h);
-                ctx.strokeStyle = outlineColor;
-                ctx.lineWidth = lineWidth;
-                ctx.lineJoin = "round";
-                ctx.lineCap = "round";
-
-                traceDartPath();
-                ctx.stroke();
-
-                ctx.beginPath();
-                ctx.moveTo(w * 0.31, h * 0.24);
-                ctx.lineTo(w * 0.71, h * 0.24);
-                ctx.moveTo(w * 0.25, h * 0.43);
-                ctx.lineTo(w * 0.75, h * 0.43);
-                ctx.moveTo(w * 0.22, h * 0.82);
-                ctx.lineTo(w * 0.58, h * 0.82);
-                ctx.moveTo(w * 0.30, h * 0.96);
-                ctx.lineTo(w * 0.70, h * 0.96);
-                ctx.stroke();
-            }
         }
     }
 
@@ -447,7 +379,7 @@ Item {
                 anchors.leftMargin: root.width * -0.01
 
                 width: root.width * 0.51
-                height: root.isAerialRobot ? root.height * 0.24 : root.height * 0.15
+                height: root.height * 0.15
 
                 // 脱战提示 (血量条右方)
                 Item {
@@ -487,7 +419,6 @@ Item {
                 Image {
                     id: bgImage
                     anchors.fill: parent
-                    visible: !root.isAerialRobot
                     source: "qrc:/images/my_robot/"  + root.teamPrefix + "_statusbar_blood_background.png"
                     fillMode: Image.Stretch
                 }
@@ -501,7 +432,7 @@ Item {
                     anchors.bottom: parent.bottom
                     anchors.bottomMargin: root.height * (-0.07)
                     width: parent.width *1.075
-                    visible: !root.isAerialRobot && root.recoveryBuff.level > 0 && root.recoveryBuff.leftTime > 0
+                    visible: root.recoveryBuff.level > 0 && root.recoveryBuff.leftTime > 0
                     source: "qrc:/images/my_robot/blood_addbuff.png"
                     fillMode: Image.Stretch
                 }
@@ -516,7 +447,6 @@ Item {
                     // 宽度根据血量比例计算
                     width: parent.width * root.healthRatio  // 使用限制后的血量比例
                     clip: true
-                    visible: !root.isAerialRobot
 
                     Image {
                         width: hpBar.width + root.width * 0.01    // 填充层宽度与血条宽度一致
@@ -528,48 +458,8 @@ Item {
                     }
                 }
 
-                Item {
-                    id: aerialHealthTrack
-                    visible: root.isAerialRobot
-                    anchors.left: parent.left
-                    anchors.right: parent.right
-                    anchors.leftMargin: root.width * 0.01
-                    anchors.rightMargin: root.width * 0.01
-                    anchors.top: parent.top
-                    anchors.topMargin: root.height * 0.04
-                    height: root.height * 0.20
-
-
-
-                    Row {
-                        id: aerialHealthRow
-                        anchors.left: parent.left
-                        anchors.verticalCenter: parent.verticalCenter
-                        spacing: root.width * 0.0065
-
-                        Repeater {
-                            model: root.aerialHealthSegments
-
-                            delegate: AerialHealthDart {
-                                id: aerialHealthDart
-
-                                required property int index
-                                readonly property real filledSegments: root.healthRatio * root.aerialHealthSegments
-
-                                width: Math.max(root.width * 0.018, (aerialHealthTrack.width - (root.aerialHealthSegments - 1) * aerialHealthRow.spacing) / root.aerialHealthSegments)
-                                height: aerialHealthTrack.height
-                                active: aerialHealthDart.index < aerialHealthDart.filledSegments
-                                strokeColor: root.aerialHealthActiveColor
-                                inactiveStrokeColor: root.aerialHealthInactiveColor
-                            }
-                        }
-                    }
-                }
-
-
                 // HP 数值文本
                 Text {
-                    visible: !root.isAerialRobot
                     anchors.centerIn: parent
                     text: root.currentHP + " / " + root.maxHP
                     color: "white"
@@ -584,7 +474,6 @@ Item {
             // 能量条宽度不超过血条
             Item {
                 id: energyBarsContainer
-                visible: !root.isAerialRobot
                 anchors.left: hpBar.left
                 anchors.top: hpBar.bottom
                 anchors.topMargin: root.height * 0.01

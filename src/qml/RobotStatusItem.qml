@@ -46,11 +46,8 @@ Item {
                             (robotInfo ? robotInfo.hp : 100)
     property int maxHP: robotInfo && robotInfo.panelMaxHp !== undefined ? Number(robotInfo.panelMaxHp) :
                         (robotInfo ? robotInfo.maxHp : 100)
-    // 空中系统没有 UWB 定位、也不在全局血量列表里；没有真实血量时显示“无UWB”而不是 0。
-    property bool hpKnown: robotInfo && robotInfo.panelHpKnown !== undefined
-                           ? Boolean(robotInfo.panelHpKnown) : true
     property bool isDead: robotInfo && robotInfo.panelIsDead !== undefined ? Boolean(robotInfo.panelIsDead) :
-                          (robotInfo && robotInfo.isDead !== undefined ? Boolean(robotInfo.isDead) : (hpKnown && currentHP <= 0))
+                          (robotInfo && robotInfo.isDead !== undefined ? Boolean(robotInfo.isDead) : currentHP <= 0)
     property bool isOffline: robotInfo && robotInfo.panelIsOffline !== undefined ? Boolean(robotInfo.panelIsOffline) :
                              (robotInfo && robotInfo.isOffline !== undefined ? Boolean(robotInfo.isOffline) : true)
     readonly property bool isConnected: robotInfo && robotInfo.panelIsConnected !== undefined
@@ -159,22 +156,11 @@ Item {
         Rectangle {
             anchors.left: parent.left
             anchors.verticalCenter: parent.verticalCenter
-            width: root.hpKnown
-                   ? Math.max(0, Math.min(parent.width, parent.width * (root.currentHP / Math.max(1, root.maxHP))))
-                   : 0
+            width: Math.max(0, Math.min(parent.width, parent.width * (root.currentHP / Math.max(1, root.maxHP))))
             height: 3
             radius: 1.5
             color: (!root.isConnected || root.isDead) ? "#777777" : (root.isBlue ? "#2DB5FF" : "#FF2C44")
             opacity: root.isDead ? 0.45 : (root.isConnected ? 0.95 : 0.0)
-        }
-
-        // 无 UWB 时没有位置和血量，用文字提示代替血条。
-        Text {
-            anchors.centerIn: parent
-            visible: !root.hpKnown
-            text: "无UWB"
-            color: "#8892A0"
-            font.pixelSize: 7
         }
     }
 }

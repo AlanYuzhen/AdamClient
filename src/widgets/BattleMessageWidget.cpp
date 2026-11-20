@@ -223,22 +223,6 @@ void BattleMessageWidget::showKill(int killerId, bool killerIsRed, int victimId,
     m_hideTimer->start(3000);
 }
 
-void BattleMessageWidget::showAirSupportStarted(bool isRedTeam) {
-    m_type = MessageType::AirSupportStarted;
-    m_airSupportInfo = {isRedTeam};
-    m_isVisible = true;
-    m_opacity = 1.0;
-
-    m_fadeAnimation->stop();
-    m_hideTimer->stop();
-
-    setWindowOpacity(1.0);
-    show();
-    update();
-
-    m_hideTimer->start(3000);
-}
-
 void BattleMessageWidget::showDartGateOpened(bool isRedTeam, bool isEnemyTeam) {
     m_type = MessageType::DartGateOpened;
     m_dartGateInfo = {isRedTeam, isEnemyTeam};
@@ -436,9 +420,6 @@ void BattleMessageWidget::paintEvent(QPaintEvent*) {
         break;
     case MessageType::RuneActived:
         drawRuneActived(p);
-        break;
-    case MessageType::AirSupportStarted:
-        drawAirSupportStarted(p);
         break;
     case MessageType::DartGateOpened:
         drawDartGateOpened(p);
@@ -860,49 +841,6 @@ void BattleMessageWidget::drawKill(QPainter &p){
         drawAvatar(p, victimRect, m_killInfo.victimId,
                 m_killInfo.victimIsRed);
     }
-}
-
-void BattleMessageWidget::drawAirSupportStarted(QPainter &p) {
-    const int padding = 10;
-    const int verticalPadding = 6;
-
-    QFont font("Roboto", 10, QFont::Bold);
-    p.setFont(font);
-    QFontMetrics fm(font);
-
-    const QString text = m_airSupportInfo.isRedTeam
-        ? QStringLiteral("红方启动空中支援")
-        : QStringLiteral("蓝方启动空中支援");
-
-    const int totalWidth = fm.horizontalAdvance(text) + padding * 4;
-    const int totalHeight = fm.height() + verticalPadding * 2;
-    const int startX = (width() - totalWidth) / 2;
-    const int startY = 0;
-    QRect rect(startX, startY, totalWidth, totalHeight);
-
-    QPixmap bgPixmap;
-    bgPixmap.load(m_airSupportInfo.isRedTeam
-                      ? ":/images/message/message_red.png"
-                      : ":/images/message/message_blue.png");
-
-    if (!bgPixmap.isNull()) {
-        p.drawPixmap(rect, bgPixmap);
-    } else {
-        QColor bgColor(20, 20, 30, 220);
-        p.setBrush(bgColor);
-        p.setPen(Qt::NoPen);
-        p.drawRoundedRect(rect, 10, 10);
-
-        const QColor borderColor = m_airSupportInfo.isRedTeam
-            ? Colors::DANGER_RED
-            : Colors::BLUE_TEAM;
-        p.setPen(QPen(borderColor, 2));
-        p.setBrush(Qt::NoBrush);
-        p.drawRoundedRect(rect, 10, 10);
-    }
-
-    p.setPen(Qt::white);
-    p.drawText(rect, Qt::AlignCenter, text);
 }
 
 void BattleMessageWidget::drawDartGateOpened(QPainter &p) {

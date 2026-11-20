@@ -25,12 +25,6 @@ Item {
 
     function avatarSource() {
         var type = String(root.robot.type || "infantry")
-        if (type === "aerial") {
-            type = "airplane"
-        }
-        if (type === "drone") {
-            type = "airplane"
-        }
         if (type === "infantry") {
             type = "soldier"
         }

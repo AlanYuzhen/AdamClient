@@ -502,7 +502,7 @@ private:
   QQuickWidget *m_qmlCentralAimingHUD =
       nullptr; // 中央瞄准 HUD (准星 + 热量环 + 射击信息)
   QQuickWidget *m_qmlEventMessagePanel = nullptr; // 事件消息提示面板
-  QQuickWidget *m_qmlOfficialEventPopupPanel = nullptr; // 空中机器人官方事件弹窗 (QML)
+  QQuickWidget *m_qmlOfficialEventPopupPanel = nullptr; // 官方事件弹窗 (QML)
   int m_officialEventPopupDurationMs = 5000; // 官方事件弹窗默认显示时长 (毫秒)
   QVector<QString> m_tacticalTimedEventRuleKeys; // 每个弹窗当前显示的规则键
   QVector<int> m_tacticalTimedEventCountdowns;   // 每个弹窗当前显示的倒计时

@@ -43,8 +43,8 @@ private slots:
              QStringLiteral("enemy_buyback_infantry_3_revived.mp3"));
     QCOMPARE(MainWindow::paidRespawnSoundFileName(104),
              QStringLiteral("enemy_buyback_infantry_4_revived.mp3"));
-    QCOMPARE(MainWindow::paidRespawnSoundFileName(106),
-             QStringLiteral("enemy_buyback_aerial_revived.mp3"));
+    // 2027 界面已移除空中系统，付费复活语音不再包含 106。
+    QVERIFY(MainWindow::paidRespawnSoundFileName(106).isEmpty());
     QCOMPARE(MainWindow::paidRespawnSoundFileName(107),
              QStringLiteral("enemy_buyback_sentry_revived.mp3"));
     QVERIFY(MainWindow::paidRespawnSoundFileName(105).isEmpty());

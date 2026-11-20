@@ -91,12 +91,12 @@ private slots:
     QTest::newRow("2-red-engineer") << static_cast<int>(Qt::Key_2) << 2;
     QTest::newRow("3-red-standard") << static_cast<int>(Qt::Key_3) << 3;
     QTest::newRow("4-red-standard") << static_cast<int>(Qt::Key_4) << 4;
-    QTest::newRow("5-red-aerial") << static_cast<int>(Qt::Key_5) << 6;
+    QTest::newRow("5-red-sentry") << static_cast<int>(Qt::Key_5) << 7;
     QTest::newRow("6-blue-hero") << static_cast<int>(Qt::Key_6) << 101;
     QTest::newRow("7-blue-engineer") << static_cast<int>(Qt::Key_7) << 102;
     QTest::newRow("8-blue-standard") << static_cast<int>(Qt::Key_8) << 103;
     QTest::newRow("9-blue-standard") << static_cast<int>(Qt::Key_9) << 104;
-    QTest::newRow("0-blue-aerial") << static_cast<int>(Qt::Key_0) << 106;
+    QTest::newRow("0-blue-sentry") << static_cast<int>(Qt::Key_0) << 107;
   }
 
   void testSettingsRobotShortcutMapping() {

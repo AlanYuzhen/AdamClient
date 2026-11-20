@@ -527,7 +527,6 @@ Item {
                 id: robotBaseImage
 
                 z: 2
-                visible: robotMarker.key !== 6 && robotMarker.key !== 13 // 非空中机器人
                 source: {
                     if (robotMarker.isHighLight) {
                         return robotMarker.isRed ? "qrc:/images/minimap/red_map_robot_lockbg.png" : "qrc:/images/minimap/blue_map_robot_lockbg.png";
@@ -549,7 +548,6 @@ Item {
                 id: directionArrow
 
                 z: 2
-                visible: robotMarker.key !== 6 && robotMarker.key !== 13 // 非空中机器人
                 source: {
                     if (robotMarker.robotId === root.currentRobotId || (robotMarker.robotId - 7 + 100) === root.currentRobotId) {
                         return "qrc:/images/minimap/self_map_arrow.png";

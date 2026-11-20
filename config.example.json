@@ -78,15 +78,6 @@
                 "auto_mode": "F1",
                 "manual_override": "F2"
             }
-        },
-        "aerial": {
-            "description": "空中机器人配置",
-            "ui_layout": "flight",
-            "modules": ["shooter", "gimbal", "flight_ctrl"],
-            "key_bindings": {
-                "ascend": "Space",
-                "descend": "Ctrl"
-            }
         }
     },
     "ar_overlay": {

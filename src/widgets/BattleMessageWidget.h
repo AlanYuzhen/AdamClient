@@ -53,7 +53,6 @@ public:
      */
     void showRuneActivable(int runeType);
     void showRuneActived(int runeType);
-    void showAirSupportStarted(bool isRedTeam);
     void showDartGateOpened(bool isRedTeam, bool isEnemyTeam);
     void showBaseUnderAttack(bool isRedTeam);
     void showEnemyOutpostStopped(bool isRedTeam);
@@ -103,7 +102,6 @@ private:
     void drawBaseDestroyed(QPainter &p);
     void drawRune(QPainter &p);
     void drawRuneActived(QPainter &p);
-    void drawAirSupportStarted(QPainter &p);
     void drawDartGateOpened(QPainter &p);
     void drawBattlefieldNotice(QPainter &p);
     void drawBaseStatusChange(QPainter &p);
@@ -125,7 +123,6 @@ private:
         BaseDestroyed,
         Rune,
         RuneActived,
-        AirSupportStarted,
         DartGateOpened,
         BattlefieldNotice,
         BaseStatusChange,
@@ -166,10 +163,6 @@ private:
         bool isRed;
         int status;
     } m_outpostStatusChangeInfo;
-
-    struct AirSupportInfo {
-        bool isRedTeam = true;
-    } m_airSupportInfo;
 
     struct DartGateInfo {
         bool isRedTeam = true;

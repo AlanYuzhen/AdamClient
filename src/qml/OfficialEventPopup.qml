@@ -1,6 +1,6 @@
 /**
  * @file OfficialEventPopup.qml
- * @brief 空中机器人官方事件提示弹窗
+ * @brief 官方事件提示弹窗
  */
 
 import QtQuick 2.15

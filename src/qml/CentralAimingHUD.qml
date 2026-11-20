@@ -19,7 +19,6 @@ Item {
     // qmllint enable unqualified
     property var myRobot: gameDataContext ? gameDataContext.myRobot : ({})
     property int robotType: (myRobot && myRobot.type !== undefined) ? Number(myRobot.type) : 3
-    property bool isAerialRobot: robotType === 6 || robotType === 4
 
     // --- 自定义 UI 数据绑定 ---
     property var customData: gameDataContext ? gameDataContext.myRobotCustomData : ({})
@@ -62,8 +61,8 @@ Item {
     // 直接使用配置下发的锁定时长
     property int speedLockSeconds: configuredSpeedLockSeconds
 
-    property bool centerSpeedWarning: speedOverLimit && !isAerialRobot
-    property bool panelSpeedWarning: speedOverLimit && isAerialRobot
+    property bool centerSpeedWarning: speedOverLimit
+    property bool panelSpeedWarning: false
 
     property bool isHero: robotType === 1
     property int allowedAmmo17mmRaw: {

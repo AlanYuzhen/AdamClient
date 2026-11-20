@@ -47,8 +47,8 @@ Rectangle {
     readonly property string currentRobotSelection: robotSelector.currentText
     readonly property var shortcutRobotTypes: [
         "R1 - Hero", "R2 - Engineer", "R3 - Standard", "R4 - Standard",
-        "R6 - Aerial", "B1 - Hero", "B2 - Engineer", "B3 - Standard",
-        "B4 - Standard", "B6 - Aerial"
+        "R7 - Sentry", "B1 - Hero", "B2 - Engineer", "B3 - Standard",
+        "B4 - Standard", "B7 - Sentry"
     ]
     property bool performanceControlsReady: false
     property bool robotShortcutPending: false
@@ -279,9 +279,9 @@ Rectangle {
                         Layout.fillWidth: true
                         Layout.preferredHeight: root.comboBoxHeight
                         model: ["R1 - Hero", "R2 - Engineer", "R3 - Standard",
-                                "R4 - Standard", "R6 - Aerial", "R7 - Sentry",
-                                "B1 - Hero", "B2 - Engineer", "B3 - Standard",
-                                "B4 - Standard", "B6 - Aerial", "B7 - Sentry"]
+                                "R4 - Standard", "R7 - Sentry", "B1 - Hero",
+                                "B2 - Engineer", "B3 - Standard",
+                                "B4 - Standard", "B7 - Sentry"]
 
                         function syncFromSelectedRobot() {
                             if (!root.selectedRobotType)

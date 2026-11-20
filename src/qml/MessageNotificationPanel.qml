@@ -6,7 +6,7 @@ import QtQuick.Layouts
 /**
  * @file MessageNotificationPanel.qml
  * @brief 系统和机器人消息通知面板 (协议绑定)
-   空中机器人获得、等级到达、获得金币、
+   等级到达、获得金币、
  * @author Clear
  * @date 2025-01-10
  */

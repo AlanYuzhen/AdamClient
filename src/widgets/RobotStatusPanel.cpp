@@ -124,9 +124,6 @@ void RobotStatusPanel::paintEvent(QPaintEvent *event) {
     case RM::RobotType::Sentry:
       typeStr = "SEN";
       break;
-    case RM::RobotType::Aerial:
-      typeStr = "AIR";
-      break;
     default:
       break;
     }
@@ -222,8 +219,6 @@ QString RobotStatusPanel::getRobotTypeIcon() const {
     return "英";
   case RobotType::Engineer:
     return "工";
-  case RobotType::Aerial:
-    return "空";
   case RobotType::Sentry:
     return "哨";
   case RobotType::Dart:
@@ -249,8 +244,6 @@ QString RobotStatusPanel::getRobotTypeName() const {
     return "英雄";
   case RobotType::Engineer:
     return "工程";
-  case RobotType::Aerial:
-    return "空中系统";
   case RobotType::Sentry:
     return "哨兵";
   case RobotType::Dart:

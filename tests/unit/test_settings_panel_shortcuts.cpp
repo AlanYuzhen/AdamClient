@@ -30,9 +30,9 @@ private slots:
     const QStringList robotTypes{
         QStringLiteral("R1 - Hero"),     QStringLiteral("R2 - Engineer"),
         QStringLiteral("R3 - Standard"), QStringLiteral("R4 - Standard"),
-        QStringLiteral("R6 - Aerial"),   QStringLiteral("B1 - Hero"),
+        QStringLiteral("R7 - Sentry"),   QStringLiteral("B1 - Hero"),
         QStringLiteral("B2 - Engineer"), QStringLiteral("B3 - Standard"),
-        QStringLiteral("B4 - Standard"), QStringLiteral("B6 - Aerial"),
+        QStringLiteral("B4 - Standard"), QStringLiteral("B7 - Sentry"),
     };
 
     for (const QString &robotType : robotTypes) {
@@ -57,7 +57,7 @@ private slots:
     QVERIFY(QMetaObject::invokeMethod(
         panel.data(), "selectRobotByShortcut",
         Q_RETURN_ARG(QVariant, invalidHandled),
-        Q_ARG(QVariant, QVariant(QStringLiteral("B7 - Sentry")))));
+        Q_ARG(QVariant, QVariant(QStringLiteral("B6 - Aerial")))));
     QVERIFY(!invalidHandled.toBool());
     QCOMPARE(panel->property("currentRobotSelection").toString(),
              selectionBeforeInvalid);
@@ -89,7 +89,7 @@ private slots:
     QVERIFY(QMetaObject::invokeMethod(
         panel.data(), "selectRobotByShortcut",
         Q_RETURN_ARG(QVariant, selectionHandled),
-        Q_ARG(QVariant, QVariant(QStringLiteral("B6 - Aerial")))));
+        Q_ARG(QVariant, QVariant(QStringLiteral("B7 - Sentry")))));
     QVERIFY(selectionHandled.toBool());
 
     // 即使已有活动机器人，数字键 + Enter 仍走现有登录槽完成身份切换；
@@ -102,7 +102,7 @@ private slots:
     QVERIFY(loginHandled.toBool());
     QCOMPARE(loginSpy.count(), 1);
     QCOMPARE(loginSpy.takeFirst().at(0).toString(),
-             QStringLiteral("B6 - Aerial"));
+             QStringLiteral("B7 - Sentry"));
     QCOMPARE(logoutSpy.count(), 0);
     QVERIFY(!panel->property("robotShortcutPending").toBool());
 
