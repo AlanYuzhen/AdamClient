@@ -1,7 +1,7 @@
 /**
  * @file CustomDataTypes.h
  * @brief 自定义数据结构定义 (用于 CustomByteBlock 协议)
- * @details 机器人端和客户端共享的数据结构定义
+ * @details 机器人端和自定义终端共享的数据结构定义
  */
 
 #ifndef CUSTOM_DATA_TYPES_H

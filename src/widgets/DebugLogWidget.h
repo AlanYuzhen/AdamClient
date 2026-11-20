@@ -146,7 +146,7 @@ private:
         } else if (msg.has_global_unit_status()) {
           content = QString("GlobalStatus: BaseHP=%1 OutpostHP=%2")
                         .arg(msg.global_unit_status().base_health())
-                        .arg(msg.global_unit_status().outpost_health());
+                        .arg(msg.global_unit_status().outpost_r_health());
         } else {
           content = "Other Message Type";
         }

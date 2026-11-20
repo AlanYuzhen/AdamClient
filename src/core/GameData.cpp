@@ -271,9 +271,6 @@ QVariantMap toBuffTimedVariant(quint8 buffType, int level, int maxTime, int left
   return map;
 }
 
-//机器人基础id
-constexpr quint8 kRadarRobotBaseIds[] = {1, 3, 4, 6, 7};
-
 //根据红蓝方和机器人基础id获取机器人id
 quint8 teamRobotId(quint8 baseId, TeamColor team) {
   return (team == TeamColor::RED) ? baseId : static_cast<quint8>(baseId + 100);
@@ -2628,13 +2625,13 @@ void GameData::updateGlobalUnitStatus(const robomaster::GlobalUnitStatus &data) 
   if (data.has_total_cp_enemy()) set(blue ? "redControlPoints" : "blueControlPoints", data.total_cp_enemy());
   if (data.has_base_shield()) set(blue ? "blueBaseControl" : "redBaseControl", data.base_shield());
   if (data.has_enemy_base_shield()) set(blue ? "redBaseControl" : "blueBaseControl", data.enemy_base_shield());
-  if (data.has_outpost_health()) set("rOutpostHp", data.outpost_health());
+  if (data.has_outpost_r_health()) set("rOutpostHp", data.outpost_r_health());
   auto redViewStatus = [blue](quint32 value) -> quint32 {
     return blue && value >= 1 && value <= 4 ? 5 - value : value;
   };
-  if (data.has_outpost_status()) set("rOutpostStatus", redViewStatus(data.outpost_status()));
-  if (data.has_enemy_outpost_health()) set("bOutpostHp", data.enemy_outpost_health());
-  if (data.has_enemy_outpost_status()) set("bOutpostStatus", redViewStatus(data.enemy_outpost_status()));
+  if (data.has_outpost_r_status()) set("rOutpostStatus", redViewStatus(data.outpost_r_status()));
+  if (data.has_outpost_b_health()) set("bOutpostHp", data.outpost_b_health());
+  if (data.has_outpost_b_status()) set("bOutpostStatus", redViewStatus(data.outpost_b_status()));
   // 血量顺序和雷达顺序不同；绝不能按长度猜阵容。
   const int healthSlots[] = {1, 3, 4, 7};
   QVariantMap health = m_command2027State.value("robotHealth").toMap();
@@ -2690,9 +2687,10 @@ void GameData::updateGlobalUnitStatus(const robomaster::GlobalUnitStatus &data) 
                                      ? extendedEnemyRoster
                                      : (useMidRoster ? midEnemyRoster
                                                      : compactEnemyRoster);
+  // 2027 协议中 4/5、9/10 是固定的 R / B 前哨，不随红蓝视角互换。
   const bool hasEnemySnapshot = data.has_enemy_base_health() ||
-      data.has_enemy_base_status() || data.has_enemy_base_shield() || data.has_enemy_outpost_health() ||
-      data.has_enemy_outpost_status() || data.robot_health_size() > allyRoster.size();
+      data.has_enemy_base_status() || data.has_enemy_base_shield() || data.has_outpost_b_health() ||
+      data.has_outpost_b_status() || data.robot_health_size() > allyRoster.size();
 
   if (data.robot_health_size() > 0) {
     for (auto &robot : m_robots) {
@@ -2703,20 +2701,18 @@ void GameData::updateGlobalUnitStatus(const robomaster::GlobalUnitStatus &data) 
 
   if (data.has_base_health()) updateBaseHP(allyTeam, static_cast<quint16>(data.base_health()));
   if (data.has_base_status()) updateBaseStatus(allyTeam, static_cast<quint8>(data.base_status()));
-  // Field 3/8 are territory-control states in the 2027 protocol, not shield values.
-  if (data.has_outpost_health()) updateOutpostHP(allyTeam, static_cast<quint16>(data.outpost_health()));
-  if (data.has_outpost_status()) updateOutpostStatus(allyTeam, static_cast<quint8>(data.outpost_status()));
+  // 字段 3/8 在 2027 协议中是基地阵地控制状态，不是护盾值。
+  if (data.has_outpost_r_health()) updateOutpostHP(TeamColor::RED, static_cast<quint16>(data.outpost_r_health()));
+  if (data.has_outpost_r_status()) updateOutpostStatus(TeamColor::RED, static_cast<quint8>(data.outpost_r_status()));
+  if (data.has_outpost_b_health()) updateOutpostHP(TeamColor::BLUE, static_cast<quint16>(data.outpost_b_health()));
+  if (data.has_outpost_b_status()) updateOutpostStatus(TeamColor::BLUE, static_cast<quint8>(data.outpost_b_status()));
 
   if (hasEnemySnapshot) {
     if (data.has_enemy_base_health()) updateBaseHP(enemyTeam, static_cast<quint16>(data.enemy_base_health()));
     if (data.has_enemy_base_status()) updateBaseStatus(enemyTeam, static_cast<quint8>(data.enemy_base_status()));
-    if (data.has_enemy_outpost_health()) updateOutpostHP(enemyTeam,
-                    static_cast<quint16>(data.enemy_outpost_health()));
-    if (data.has_enemy_outpost_status()) updateOutpostStatus(enemyTeam,
-                        static_cast<quint8>(data.enemy_outpost_status()));
   }
 
-  auto applyRobotSnapshot = [this, &data](int topicIndex, int robotId) -> int {
+  auto applyRobotSnapshot = [this, &data](int topicIndex, int robotId, int bulletIndex) -> int {
     if (topicIndex >= data.robot_health_size()) {
       return 0;
     }
@@ -2739,8 +2735,9 @@ void GameData::updateGlobalUnitStatus(const robomaster::GlobalUnitStatus &data) 
     robot->lastUpdateTime = QDateTime::currentDateTime();
     robot->hasTabGlobalSnapshot = true;
 
-    if (topicIndex < data.robot_bullets_size()) {
-      const int bullets = std::max(0, data.robot_bullets(topicIndex));
+    // 2027：robot_bullets 只发己方（按己方 1/3/4/7 顺序），敌方没有该字段。
+    if (bulletIndex >= 0 && bulletIndex < data.robot_bullets_size()) {
+      const int bullets = std::max(0, data.robot_bullets(bulletIndex));
       if (robotId == 1 || robotId == 101) {
         robot->allowedAmmo42mm = static_cast<quint16>(bullets);
       } else {
@@ -2768,12 +2765,12 @@ void GameData::updateGlobalUnitStatus(const robomaster::GlobalUnitStatus &data) 
   const int allyRobotCount =
       std::min(data.robot_health_size(), static_cast<int>(allyRoster.size()));
   for (int i = 0; i < allyRobotCount; ++i) {
-    allyTotalHp += applyRobotSnapshot(i, allyRoster.at(i));
+    allyTotalHp += applyRobotSnapshot(i, allyRoster.at(i), i);
   }
 
   int enemyTotalHp = 0;
   for (int i = 0; hasEnemySnapshot && i < enemyRoster.size(); ++i) {
-    enemyTotalHp += applyRobotSnapshot(i + allyRoster.size(), enemyRoster.at(i));
+    enemyTotalHp += applyRobotSnapshot(i + allyRoster.size(), enemyRoster.at(i), -1);
   }
 
   if (isBluePerspective) {
@@ -3490,7 +3487,7 @@ quint8 GameData::determineWinner() const {
     return 0;
   }
 
-  // 基线丢失时的回退：使用绝对分数判定（适用于客户端在战斗中后连接等场景）
+  // 基线丢失时的回退：使用绝对分数判定（适用于自定义终端在战斗中后连接等场景）
   if (m_gameState.redScore > m_gameState.blueScore) return 1;
   if (m_gameState.blueScore > m_gameState.redScore) return 2;
   return 0;
@@ -3522,7 +3519,7 @@ void GameData::updateRadarMarkData(const robomaster::RadarMarkData &data) {
     // 更新历史状态
     m_runeData.wasActivatable = m_runeData.isActivatable;
 
-    // 雷达标记进度字段目前未纳入客户端状态投影。
+    // 雷达标记进度字段目前未纳入自定义终端状态投影。
 }
 
 void GameData::updateGroundRobotPosition(const robomaster::GroundRobotPosition &data) {
@@ -4057,19 +4054,30 @@ void GameData::updateRadarInfo(const robomaster::RadarInfoToClient &data) {
       (myTeam == TeamColor::RED) ? TeamColor::BLUE : TeamColor::RED;
   const QDateTime now = QDateTime::currentDateTime();
 
-  // 2027：敌方 1/3/4/6/7，然后己方，共 10 项
-  QList<quint8> orderedRobotIds;
-  orderedRobotIds.reserve(10);
-  for (quint8 baseId : kRadarRobotBaseIds) {
-    orderedRobotIds.append(teamRobotId(baseId, enemyTeam));
-  }
-  for (quint8 baseId : kRadarRobotBaseIds) {
-    orderedRobotIds.append(teamRobotId(baseId, myTeam));
-  }
+  // 2027 协议 2.2.19：雷达只上报地面机器人，顺序为对方 1/3/4/7、己方 1/3/4/7（共 8 项）。
+  // 旧赛项仍可能发 10 项（含 6 号空中）或 12 项（含 2 号工程），按实际包长选择槽位，
+  // 避免把 6 号空中当成必选槽位导致后续位置整体错位。
+  static constexpr quint8 kSlots4[] = {1, 3, 4, 7};
+  static constexpr quint8 kSlots5[] = {1, 3, 4, 6, 7};
+  static constexpr quint8 kSlots6[] = {1, 2, 3, 4, 6, 7};
 
   //检查数据量是否正常
   const int valueCount = data.robot_info_size();
   const int packetCount = valueCount / 3;
+  // 每侧 4 项（2027）、5 项（含 6 号空中）或 6 项（含 2 号工程）。
+  const int perSide = packetCount / 2;
+  const quint8 *slotTable = perSide >= 6 ? kSlots6 : (perSide == 5 ? kSlots5 : kSlots4);
+  const int slotCount = perSide >= 6 ? 6 : (perSide == 5 ? 5 : 4);
+
+  QList<quint8> orderedRobotIds;
+  orderedRobotIds.reserve(slotCount * 2);
+  for (int i = 0; i < slotCount; ++i) {
+    orderedRobotIds.append(teamRobotId(slotTable[i], enemyTeam));
+  }
+  for (int i = 0; i < slotCount; ++i) {
+    orderedRobotIds.append(teamRobotId(slotTable[i], myTeam));
+  }
+
   const int expectedRobotCount = static_cast<int>(orderedRobotIds.size());
   const int robotCount = qMin(packetCount, expectedRobotCount);
   if (valueCount % 3 != 0 || packetCount != expectedRobotCount) {

@@ -1,12 +1,12 @@
 # RoboMaster 2027 自定义终端协议适配
 
-当前客户端的协议目标为《RoboMaster 2027 University Series Communication Protocol V1.0.0》
+当前自定义终端的协议目标为《RoboMaster 2027 University Series Communication Protocol V1.0.0》
 （2026-11-02）。Topic、方向、频率、QoS、字段类型和字段号以协议的字段表、命令总表为准；
 示例代码用于辅助阅读。当示例与表格冲突时，按表格实现，并在下文记录差异。
 
-## 客户端接入
+## 自定义终端接入
 
-| 类型 | Topic | 客户端处理 |
+| 类型 | Topic | 自定义终端处理 |
 | --- | --- | --- |
 | 接收 | `GameStatus`、`GlobalUnitStatus`、`GlobalLogisticsStatus`、`GlobalSpecialMechanism` | 比赛状态、单位状态、后勤、特殊机制；控制度字段单独投影到指挥界面 |
 | 接收 | `Event`、`RobotInjuryStat`、`RobotRespawnStatus`、`RobotStaticStatus`、`RobotDynamicStatus`、`RobotModuleStatus`、`RobotPosition`、`Buff`、`PenaltyInfo` | 事件、机器人和判罚状态；`RobotPosition` 按字段 presence 局部更新 |
@@ -28,15 +28,15 @@
 - `MapClickCmd.robot_id` 是固定 7 字节的机器人 ID 列表；不是位图。
 - `RobotDynamicStatus` 字段 4 为保留项；模块化 42mm 权限来自 `RobotModuleStatus` 字段 11。
 - 附录 II 的 MQTT Client ID 使用 `0x0100 + robot_id`；机器人 2 为预留位，不建立该身份。
-- 不在 2027 命令总表中的旧 `AirSupportCommand` 和 `HeroDeployModeEventCommand` 不会从客户端发送。
+- 不在 2027 命令总表中的旧 `AirSupportCommand` 和 `HeroDeployModeEventCommand` 不会从自定义终端发送。
 
 ## PDF 示例差异
 
 `RadarInfoToClient` 字段表规定字段 1 为重复 `uint32`，且说明每台机器人连续发送 X/Y/识别状态；
-同节 protobuf 示例却声明重复 `RadarSingleRobotInfo`，与表格的类型和形状不一致。客户端按字段表
+同节 protobuf 示例却声明重复 `RadarSingleRobotInfo`，与表格的类型和形状不一致。自定义终端按字段表
 实现为重复标量，并保留 10 台机器人各三个值的布局。
 
-`RobotPosition` 字段表没有列出 `robot_id`，文末示例却包含字段 5。客户端保留字段 5 以兼容该示例，
+`RobotPosition` 字段表没有列出 `robot_id`，文末示例却包含字段 5。自定义终端保留字段 5 以兼容该示例，
 同时将其设为 optional；如果线上包不含该字段，则归属当前配置的机器人。
 
 ## 验证边界

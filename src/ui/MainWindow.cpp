@@ -1360,7 +1360,7 @@ void MainWindow::startServices() {
 
 #ifdef RM_HAS_QT_MQTT
 #ifndef RM_HAS_MQTT
-  // 启动 MQTT 客户端（如果已找到 Qt6::Mqtt）
+  // 启动 MQTT 自定义终端（如果已找到 Qt6::Mqtt）
   if (!m_mqttClient) {
     m_mqttClient = new MqttClient(m_gameData, this);
   }
@@ -2954,30 +2954,6 @@ void MainWindow::createCenterArea() {
   m_hKeyHint->raise();
   updateExchangeHintText(m_exchangeQmlSource);
 
-  // 常驻 K/L 部署状态提示（按键逻辑在 QML 内实现）
-  if (!m_qmlDeployModePanel) {
-    m_qmlDeployModePanel = new QQuickWidget(this);
-    m_qmlDeployModePanel->setResizeMode(QQuickWidget::SizeRootObjectToView);
-    makeQQuickWidgetTransparent(m_qmlDeployModePanel);
-    m_qmlDeployModePanel->rootContext()->setContextProperty("gameData",
-                                                            m_gameData);
-
-    //将network注入到DeployModePanel中
-    if (m_networkManager) {
-      m_qmlDeployModePanel->rootContext()->setContextProperty("network",
-                                                              m_networkManager);
-    }
-    m_qmlDeployModePanel->setSource(QUrl("qrc:/qml/DeployModePanel.qml"));
-    if (m_qmlDeployModePanel->status() == QQuickWidget::Error) {
-      qWarning() << "DeployModePanel QML Load Errors:";
-      for (const auto &error : m_qmlDeployModePanel->errors()) {
-        qWarning() << "  " << error.toString();
-      }
-    }
-    m_qmlDeployModePanel->show();
-    ensureOverlayRaisedIfActive();
-  }
-
   //面板大小自适应
   applyPanelResolutionScaling();
 
@@ -3070,7 +3046,7 @@ void MainWindow::applyStyles() {
  * - 连接到onTimerUpdate槽函数处理更新逻辑
  */
 void MainWindow::setupTimer() {
-  // 定时器仅用于客户端本地倒计时同步和FPS统计
+  // 定时器仅用于自定义终端本地倒计时同步和FPS统计
   // UI 数据更新由信号驱动（增量更新模式）
   m_updateTimer = new QTimer(this);
   connect(m_updateTimer, &QTimer::timeout, this, &MainWindow::onTimerUpdate);
@@ -3780,7 +3756,7 @@ void MainWindow::setOfficialEventPopupDuration(int durationMs) {
 }
 
 /**
- * @brief 定时器更新 - 仅用于客户端本地计算
+ * @brief 定时器更新 - 仅用于自定义终端本地计算
  * @details 1Hz 更新: 倒计时同步、FPS/Ping 统计
  *          机器人数据更新由信号驱动，不在此处理
  */
@@ -3788,7 +3764,7 @@ void MainWindow::onTimerUpdate() {
   if (!m_gameData)
     return;
 
-  // 同步比赛时间（客户端本地倒计时）
+  // 同步比赛时间（自定义终端本地倒计时）
   m_gameTime = m_gameData->getGameTime();
 
   // 剩余 5 秒时尝试播放可选提示音，不中断已有 BGM。
@@ -3882,8 +3858,7 @@ void MainWindow::updateExchangeHintText(const QString &robotType) {
     if (m_exchangeHintBox) {
       m_exchangeHintBox->hide();
     }
-    updateDeployModePanelGeometry();
-    return;
+      return;
   }
 
   // 未登录时不显示任何 H 提示相关控件
@@ -3895,29 +3870,20 @@ void MainWindow::updateExchangeHintText(const QString &robotType) {
     if (m_exchangeHintBox) {
       m_exchangeHintBox->hide();
     }
-    updateDeployModePanelGeometry();
-    return;
+      return;
   }
 
   // 判断面板是否打开
   bool isPanelOpen = m_qmlExchangePanel && m_qmlExchangePanel->isVisible();
   QString actionText = isPanelOpen ? "关闭" : "打开";
 
-  // 判断机器人类型
-  const QString effectiveRobotType =
-      robotType.isEmpty() ? m_selectedRobotTypeFromSettings : robotType;
-  const int baseRobotId = baseRobotIdFromSettingsType(effectiveRobotType);
-  bool isEngineer = baseRobotId == 2 ||
-                    m_exchangeQmlSource.contains("ExchangePanelEngineer.qml");
-  bool isAerial = baseRobotId == 6 ||
-                  m_exchangeQmlSource.contains("ExchangePanelAerial.qml");
-
-  bool isSpecialRobot = isEngineer || isAerial;
+  // 2027 起工程/英雄部署/空中支援面板已移除，兑换统一走远程兑换。
+  Q_UNUSED(robotType);
   const bool canOpenRemoteExchange = canOpenRemoteExchangePanel();
 
   // V1.3.0 RobotDynamicStatus 已直接上报 can_remote_heal / can_remote_ammo。
   // 脱战只保留在协议侧或缺失数据时作为保护，不再由 UI 自行推导远程兑换许可。
-  if (!isSpecialRobot && !canOpenRemoteExchange) {
+  if (!canOpenRemoteExchange) {
     if (m_qmlExchangePanel) {
       m_qmlExchangePanel->hide();
       m_qmlExchangePanel->setEnabled(false);
@@ -3936,18 +3902,7 @@ void MainWindow::updateExchangeHintText(const QString &robotType) {
     m_qmlExchangePanel->setEnabled(true);
   }
 
-  QString text;
-  if (isEngineer) {
-    if (isPanelOpen) {
-      text.clear();
-    } else {
-      text = "按\"H\"选择兑换难度";
-    }
-  } else if (isAerial) {
-    text = QString("按\"H\"%1空中支援面板").arg(actionText);
-  } else {
-    text = QString("按\"H\"%1远程兑换面板").arg(actionText);
-  }
+  QString text = QString("按\"H\"%1远程兑换面板").arg(actionText);
 
   if (text.isEmpty()) {
     m_exchangeHint->hide();
@@ -3974,7 +3929,6 @@ void MainWindow::updateExchangeHintText(const QString &robotType) {
     }
   }
   updateExchangeHintOverlayGeometry();
-  updateDeployModePanelGeometry();
 }
 
 //是否可以打开远程面板
@@ -4233,20 +4187,7 @@ void MainWindow::updateExchangePanelGeometry() {
     return;
   }
 
-  const bool isEngineer =
-      m_exchangeQmlSource.contains("ExchangePanelEngineer.qml");
-
-  // 工程面板使用全屏容器，QML 内部自行控制主卡片位置。
-  if (isEngineer) {
-    m_qmlExchangePanel->setMinimumSize(0, 0);
-    m_qmlExchangePanel->setMaximumSize(QWIDGETSIZE_MAX, QWIDGETSIZE_MAX);
-    m_qmlExchangePanel->setResizeMode(QQuickWidget::SizeRootObjectToView);
-    m_qmlExchangePanel->resize(width(), height());
-    m_qmlExchangePanel->move(0, 0);
-    return;
-  }
-
-  // 普通/空中面板按缩放尺寸贴底居中显示。
+  // 2027 只剩统一的远程兑换面板，按缩放尺寸贴底居中显示。
   const QSize panelSize = getScaledPanelSize(300, 190);
   m_qmlExchangePanel->setFixedSize(panelSize);
   m_qmlExchangePanel->setResizeMode(QQuickWidget::SizeRootObjectToView);
@@ -4263,71 +4204,9 @@ int MainWindow::exchangePanelVisualTop() const {
     return 0;
   }
 
-  const bool isEngineer =
-      m_exchangeQmlSource.contains("ExchangePanelEngineer.qml");
-  if (!isEngineer) {
-    return m_qmlExchangePanel->y();
-  }
-
-  int panelHeight = 370;
-  if (QObject *root = m_qmlExchangePanel->rootObject()) {
-    const QVariant h = root->property("mainpannelHeight");
-    if (h.isValid()) {
-      panelHeight = h.toInt();
-    }
-  }
-  return m_qmlExchangePanel->y() +
-         (m_qmlExchangePanel->height() - panelHeight) / 2;
+  return m_qmlExchangePanel->y();
 }
 
-
-// 处理工程机器人 L 键，避免快捷键冲突。
-bool MainWindow::tryHandleEngineerExitShortcut() {
-  if (!m_qmlExchangePanel || !m_qmlExchangePanel->isVisible()) {
-    return false;
-  }
-
-  if (!m_exchangeQmlSource.contains("ExchangePanelEngineer.qml")) {
-    return false;
-  }
-
-  QObject *rootObj = m_qmlExchangePanel->rootObject();
-  if (!rootObj) {
-    return false;
-  }
-
-  QVariant handled;
-  const bool invoked = QMetaObject::invokeMethod(
-      rootObj, "handleExitShortcut", Q_RETURN_ARG(QVariant, handled));
-  if (invoked) {
-    return handled.toBool();
-  }
-
-  return false;
-}
-
-bool MainWindow::tryHandleEngineerConfirmShortcut(QKeyEvent *event) {
-  if (!RM::InputHotkeyPolicy::isEngineerConfirmHotkey(event) ||
-      !m_qmlExchangePanel || !m_qmlExchangePanel->isVisible() ||
-      !m_exchangeQmlSource.contains("ExchangePanelEngineer.qml") ||
-      m_qmlExchangePanel->status() != QQuickWidget::Ready) {
-    return false;
-  }
-
-  QObject *rootObj = m_qmlExchangePanel->rootObject();
-  if (!rootObj || rootObj->property("viewState").toString() != "selection") {
-    return false;
-  }
-
-  const bool invoked =
-      QMetaObject::invokeMethod(rootObj, "confirmAssemblySelection");
-  qInfo() << "MainWindow: engineer assembly selection confirm"
-          << "key=" << event->key() << "invoked=" << invoked
-          << "difficulty=" << rootObj->property("selectedIndex").toInt()
-          << "maxDifficulty="
-          << rootObj->property("maximumDifficultyLevel").toInt();
-  return invoked;
-}
 
 void MainWindow::refreshHeroVideoStream() {
   if (!m_videoBackground || !m_gameData) {
@@ -4418,7 +4297,6 @@ void MainWindow::applyTacticalMode(bool enabled) {
     setVisibleIfNeeded(m_battleMessage, false);
     setVisibleIfNeeded(m_helpOverlay, false);
     setVisibleIfNeeded(m_gameResultWidget, false);
-    setVisibleIfNeeded(m_qmlDeployModePanel, false);
     setVisibleIfNeeded(m_qmlExchangePanel, false);
     setVisibleIfNeeded(m_qmlSiloPanel, false);
     setVisibleIfNeeded(m_hKeyHint, false);
@@ -4476,8 +4354,7 @@ void MainWindow::applyTacticalMode(bool enabled) {
     if (m_tacticalMode != enabled) {
       return;
     }
-    updateDeployModePanelGeometry();
-    scheduleOverlayLayerRestack();
+      scheduleOverlayLayerRestack();
   });
   if (m_tacticalMode && m_tacticalLoginButton) {
     QTimer::singleShot(0, this, [this]() {
@@ -4590,42 +4467,6 @@ void MainWindow::updateHeroVideoWidgetGeometry() {
 }
 
 //处理空中支援中断快捷键
-bool MainWindow::tryHandleAerialAirSupportInterruptShortcut() {
-  return tryHandleAerialAirSupportShortcut(0);
-}
-
-bool MainWindow::tryHandleAerialAirSupportShortcut(int action) {
-  if (!m_qmlExchangePanel || !m_qmlExchangePanel->isVisible()) {
-    return false;
-  }
-
-  if (!m_exchangeQmlSource.contains("ExchangePanelAerial.qml",
-                                    Qt::CaseInsensitive)) {
-    return false;
-  }
-
-  QObject *rootObj = m_qmlExchangePanel->rootObject();
-  if (!rootObj) {
-    qWarning() << "MainWindow: Aerial exchange panel has no root object,"
-                  " cannot dispatch AirSupportCommand"
-               << "action=" << action;
-    return false;
-  }
-
-  const bool invoked = QMetaObject::invokeMethod(
-      rootObj, "actionSelected", Q_ARG(QVariant, QVariant(action)));
-  if (!invoked) {
-    qWarning() << "MainWindow: Failed to invoke aerial actionSelected,"
-                  " AirSupportCommand was not dispatched"
-               << "action=" << action;
-    return false;
-  }
-
-  qInfo() << "MainWindow: Dispatched aerial shortcut to QML"
-          << "action=" << action;
-  return true;
-}
-
 bool MainWindow::tryHandleRuneHoldShortcut() {
   if (!m_qmlRunePanel || !m_gameData) {
     return false;
@@ -4681,69 +4522,6 @@ void MainWindow::endRuneHoldShortcut() {
   updateRunePanelVisibility();
 }
 
-bool MainWindow::shouldShowDeployModePanel() const {
-  if (!m_qmlDeployModePanel) {
-    return false;
-  }
-
-  // 战术指挥屏是全屏 QML 页面，正式主界面的 H/K 部署 overlay
-  // 不能叠到战术面板上，否则会遮挡底部战术分析标题。
-  if (m_tacticalMode) {
-    return false;
-  }
-
-  // H 兑换面板打开时，部署提示面板强制隐藏
-  if (m_qmlExchangePanel && m_qmlExchangePanel->isVisible()) {
-    return false;
-  }
-
-  const bool isHeroSelected =
-      baseRobotIdFromSettingsType(m_selectedRobotTypeFromSettings) == 1 ||
-      m_selectedRobotTypeFromSettings.contains("Hero", Qt::CaseInsensitive);
-  return isHeroSelected;
-}
-
-void MainWindow::updateDeployModePanelGeometry() {
-  if (!m_qmlDeployModePanel) {
-    return;
-  }
-
-  const double scale = getPanelScaleFactor();
-  const QSize panelSize = getScaledPanelSize(200, 96);
-  if (m_qmlDeployModePanel->size() != panelSize) {
-    m_qmlDeployModePanel->setFixedSize(panelSize);
-  }
-
-  if (QObject *rootObj = m_qmlDeployModePanel->rootObject()) {
-    rootObj->setProperty("shortcutsEnabled", shouldShowDeployModePanel());
-  }
-
-  if (!shouldShowDeployModePanel()) {
-    m_qmlDeployModePanel->hide();
-    return;
-  }
-
-  if (!m_qmlDeployModePanel->isVisible()) {
-    m_qmlDeployModePanel->show();
-  }
-
-  const int panelX = (width() - m_qmlDeployModePanel->width()) / 2;
-  const int spacing = qMax(6, qRound(8.0 * scale));
-  int panelY = height() - m_qmlDeployModePanel->height() - qMax(110, qRound(130.0 * scale));
-
-  // 优先贴在 H 键提示上方；如果 H 键隐藏，则贴在文字提示上方。
-  if (m_hKeyHint && m_hKeyHint->isVisible()) {
-    panelY = m_hKeyHint->y() - m_qmlDeployModePanel->height() - spacing;
-  } else if (m_exchangeHint && m_exchangeHint->isVisible()) {
-    panelY = m_exchangeHint->y() - m_qmlDeployModePanel->height() -
-             qMax(36, qRound(44.0 * scale));
-  }
-
-  panelY = qMax(4, panelY);
-  m_qmlDeployModePanel->move(panelX, panelY);
-  ensureOverlayRaisedIfActive();
-}
-
 void MainWindow::updateCurrentRobotPanel() {
   if (!m_gameData)
     return;
@@ -4796,7 +4574,6 @@ void MainWindow::updateCurrentRobotPanel() {
   syncSettingsPanelState();
 
   // 机器人切换后立即刷新部署提示可见性（仅英雄显示）
-  updateDeployModePanelGeometry();
   updateRunePanelVisibility();
 }
 
@@ -4924,15 +4701,7 @@ void MainWindow::applySettingsRobotSelection(const QString &robotType,
   }
 
   m_selectedRobotTypeFromSettings = robotType;
-  const int baseRobotId = baseRobotIdFromSettingsType(robotType);
-  QString nextExchangeQmlSource;
-  if (baseRobotId == 2) {
-    nextExchangeQmlSource = "qrc:/qml/ExchangePanelEngineer.qml";
-  } else if (baseRobotId == 6) {
-    nextExchangeQmlSource = "qrc:/qml/ExchangePanelAerial.qml";
-  } else {
-    nextExchangeQmlSource = "qrc:/qml/ExchangePanel.qml";
-  }
+  const QString nextExchangeQmlSource = "qrc:/qml/ExchangePanel.qml";
 
   const bool exchangePanelSourceChanged = (m_exchangeQmlSource != nextExchangeQmlSource);
   m_exchangeQmlSource = nextExchangeQmlSource;
@@ -5797,10 +5566,6 @@ void MainWindow::applyPanelResolutionScaling() {
     setQmlRootScale(m_qmlDamagePanel, scale);
   }
 
-  if (m_qmlDeployModePanel) {
-    updateDeployModePanelGeometry();
-  }
-
   if (m_qmlExchangePanel) {
     updateExchangePanelGeometry();
   }
@@ -5850,8 +5615,6 @@ void MainWindow::applyPanelResolutionScaling() {
     m_qmlDamagePanel->move(leftMargin,
                            (height() - m_qmlDamagePanel->height()) / 2);
   }
-  if (m_qmlDeployModePanel)
-    updateDeployModePanelGeometry();
   if (m_qmlExchangePanel && m_qmlExchangePanel->isVisible()) {
     updateExchangePanelGeometry();
   }
@@ -6686,29 +6449,6 @@ bool MainWindow::eventFilter(QObject *obj, QEvent *event) {
         !isInputEventFromClientWindow(obj)) {
       return QMainWindow::eventFilter(obj, event);
     }
-    if (RM::InputHotkeyPolicy::isEngineerConfirmHotkey(keyEvent) &&
-        m_qmlExchangePanel && m_qmlExchangePanel->isVisible() &&
-        m_exchangeQmlSource.contains("ExchangePanelEngineer.qml")) {
-      event->accept();
-      return true;
-    }
-    if (!keyEvent->isAutoRepeat() &&
-        keyEvent->modifiers() == Qt::NoModifier &&
-        keyEvent->key() == Qt::Key_N &&
-        m_qmlExchangePanel && m_qmlExchangePanel->isVisible() &&
-        m_exchangeQmlSource.contains("ExchangePanelAerial.qml",
-                                     Qt::CaseInsensitive)) {
-      event->accept();
-      return true;
-    }
-    if ((keyEvent->modifiers() & Qt::ControlModifier) &&
-        (keyEvent->key() == Qt::Key_1 || keyEvent->key() == Qt::Key_2) &&
-        m_qmlExchangePanel && m_qmlExchangePanel->isVisible() &&
-        m_exchangeQmlSource.contains("ExchangePanelAerial.qml",
-                                     Qt::CaseInsensitive)) {
-      event->accept();
-      return true;
-    }
     if (!hasBlockedModifiers(keyEvent->modifiers()) &&
         (RM::InputHotkeyPolicy::isGlobalPanelHotkey(keyEvent->key()) ||
          RM::InputHotkeyPolicy::isDamagePanelHotkey(keyEvent))) {
@@ -6723,13 +6463,6 @@ bool MainWindow::eventFilter(QObject *obj, QEvent *event) {
     if (m_tacticalMode && isTacticalLayoutSwitchShortcut(keyEvent)) {
       event->accept();
       return true;
-    }
-    if (keyEvent->key() == Qt::Key_L &&
-        !(keyEvent->modifiers() & Qt::ControlModifier)) {
-      if (tryHandleEngineerExitShortcut()) {
-        event->accept();
-        return true;
-      }
     }
     if (canUseKeyboardMouseControl() && !isKeyboardMouseControlBlocked() &&
         !(keyEvent->modifiers() & (Qt::AltModifier | Qt::MetaModifier)) &&
@@ -6748,33 +6481,12 @@ bool MainWindow::eventFilter(QObject *obj, QEvent *event) {
         !isInputEventFromClientWindow(obj)) {
       return QMainWindow::eventFilter(obj, event);
     }
-    if (tryHandleEngineerConfirmShortcut(keyEvent)) {
-      event->accept();
-      return true;
-    }
     if (tryHandleRespawnShortcut(keyEvent)) {
       event->accept();
       return true;
     }
     if (!keyEvent->isAutoRepeat() &&
-        keyEvent->modifiers() == Qt::NoModifier &&
-        keyEvent->key() == Qt::Key_N &&
-        tryHandleAerialAirSupportInterruptShortcut()) {
-      event->accept();
-      return true;
-    }
-    if (!keyEvent->isAutoRepeat() &&
         (keyEvent->modifiers() & Qt::ControlModifier)) {
-      if (keyEvent->key() == Qt::Key_1 &&
-          tryHandleAerialAirSupportShortcut(1)) {
-        event->accept();
-        return true;
-      }
-      if (keyEvent->key() == Qt::Key_2 &&
-          tryHandleAerialAirSupportShortcut(2)) {
-        event->accept();
-        return true;
-      }
       if (keyEvent->key() == Qt::Key_T) {
         keyPressEvent(keyEvent);
         event->accept();
@@ -6845,20 +6557,13 @@ bool MainWindow::eventFilter(QObject *obj, QEvent *event) {
 
     if (!keyEvent->isAutoRepeat() &&
         handleKeyboardMouseControlKey(keyEvent, true)) {
-      // F 继续上报 KeyboardMouseControl，同时让客户端进入本地 Y/N 确认状态。
+      // F 继续上报 KeyboardMouseControl，同时让自定义终端进入本地 Y/N 确认状态。
       tryHandleSiloOpenShortcut(keyEvent);
       event->accept();
       return true;
     }
 
     //处理L按键
-    if (keyEvent->key() == Qt::Key_L &&
-        !(keyEvent->modifiers() & Qt::ControlModifier)) {
-      if (tryHandleEngineerExitShortcut()) {
-        event->accept();
-        return true;
-      }
-    }
 
   } else if (event->type() == QEvent::KeyRelease) {
     QKeyEvent *keyEvent = static_cast<QKeyEvent *>(event);
@@ -7434,11 +7139,6 @@ void MainWindow::keyPressEvent(QKeyEvent *event) {
 
   case Qt::Key_L: {
     if (!(event->modifiers() & Qt::ControlModifier)) {
-      // 1) 工程机器人：L键工程推出矿石
-      if (tryHandleEngineerExitShortcut()) {
-        break;
-      }
-
       // 2) 空中机器人：L 键触发飞镖发射
       if (invokeSiloMethod("requestFire")) {
         break;
@@ -7566,9 +7266,7 @@ void MainWindow::keyPressEvent(QKeyEvent *event) {
       break;
     }
 
-    bool isEngineer = m_exchangeQmlSource.contains("ExchangePanelEngineer.qml");
-    bool isAerial = m_exchangeQmlSource.contains("ExchangePanelAerial.qml");
-    if (!isEngineer && !isAerial && !canOpenRemoteExchangePanel()) {
+    if (!canOpenRemoteExchangePanel()) {
       if (m_qmlExchangePanel) {
         safeQuickHide(m_qmlExchangePanel);
         m_qmlExchangePanel->setEnabled(false);
@@ -7613,11 +7311,6 @@ void MainWindow::keyPressEvent(QKeyEvent *event) {
     updateExchangePanelGeometry();
 
     if (isQuickPanelEffectivelyVisible(m_qmlExchangePanel)) {
-      if (isEngineer) {
-        if (QObject *rootObj = m_qmlExchangePanel->rootObject()) {
-          QMetaObject::invokeMethod(rootObj, "closeAllPopups");
-        }
-      }
       safeQuickHide(m_qmlExchangePanel);
       if (m_hKeyHint)
         m_hKeyHint->show();
@@ -7715,9 +7408,6 @@ void MainWindow::keyPressEvent(QKeyEvent *event) {
 
   case Qt::Key_N:
     if (siloIsConfirming() && invokeSiloMethod("cancelConfirm")) {
-      break;
-    }
-    if (tryHandleAerialAirSupportInterruptShortcut()) {
       break;
     }
     // 切换脱战状态 isOutOfCombat
@@ -8004,7 +7694,6 @@ void MainWindow::resizeEvent(QResizeEvent *event) {
                              (height() - m_qmlSettingsPanel->height()) / 2);
   }
   ensureInteractivePanelsRaisedIfVisible();
-  updateDeployModePanelGeometry();
 #ifdef RM_HAS_AR_OVERLAY
   // 调整 AR 叠加层大小以匹配视频区域
   if (m_arWidget && m_centerArea) {

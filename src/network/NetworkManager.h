@@ -2,11 +2,11 @@
 /**
  * @file NetworkManager.h
  * @brief 网络通信管理器
- * @details 本文件定义了 NetworkManager 类，负责处理客户端与裁判系统服务器之间的
+ * @details 本文件定义了 NetworkManager 类，负责处理自定义终端与裁判系统服务器之间的
  *          UDP 与 MQTT 通信。主要功能包括：
  *          - 绑定端口监听传入 UDP 数据包
  *          - 发送原始字节数据和 Protobuf 消息
- *          - 连接官方自定义客户端 MQTT Broker 并处理 Topic 收发
+ *          - 连接官方自定义终端 MQTT Broker 并处理 Topic 收发
  *          - 接收并解析服务器下发的比赛数据
  *          - 将解析后的数据分发到 GameData 进行状态更新
  *
@@ -36,7 +36,7 @@
 #include <QUdpSocket>         // Qt UDP 套接字类
 
 #ifdef RM_HAS_MQTT
-#include "MqttManager.h" // MQTT 客户端管理器
+#include "MqttManager.h" // MQTT 自定义终端管理器
 #endif
 
 namespace RM {
@@ -151,7 +151,7 @@ public:
    * @details 在后台线程连接 MQTT Broker，主线程不会阻塞。
    *          连接结果通过 mqttConnectCompleted 信号通知。
    * @param brokerUri Broker 地址，格式 "tcp://ip:port"
-   * @param clientId 客户端 ID
+   * @param clientId 自定义终端 ID
    */
   void startMqtt(const QString &brokerUri, const QString &clientId);
 
@@ -197,7 +197,7 @@ public:
                 const QHostAddress &address, quint16 port);
 
   /**
-   * @brief 发送客户端状态
+   * @brief 发送自定义终端状态
    * @details 旧版 UDP 接口，仅用于历史兼容。
    *          该旧版 UDP 消息不属于 2027 自定义终端 MQTT 命令表。
    *
@@ -281,7 +281,6 @@ public:
    * @brief 兼容旧界面的空中支援入口
    * @note AirSupportCommand 不在 2027 自定义终端命令表中，本方法拒绝发送。
    */
-  Q_INVOKABLE bool sendAirSupportCommand(int commandId);
 
   /**
    * @brief 发送机器人性能体系选择指令 RobotPerformanceSelectionCommand
@@ -293,12 +292,6 @@ public:
   Q_INVOKABLE void sendRobotPerformanceSelection(uint32_t shooter, uint32_t chassis, uint32_t sentryControl);
 
   Q_INVOKABLE bool sendSentryCtrlCommand(uint32_t commandId);
-
-  /**
-   * @brief 兼容旧界面的英雄部署入口
-   * @note HeroDeployModeEventCommand 不在 2027 自定义终端命令表中，本方法拒绝发送。
-   */
-  Q_INVOKABLE void sendHeroDeployMode(uint32_t mode);
 
   /**
    * @brief 发送能量机关激活指令 RuneActivateCommand
@@ -347,8 +340,8 @@ signals:
 
 #ifdef RM_HAS_MQTT
   /**
-   * @brief MQTT 消息被客户端本地观测到
-   * @details 该时间戳来自客户端本机 MQTT 回调，不代表赛事引擎发布时刻。
+   * @brief MQTT 消息被自定义终端本地观测到
+   * @details 该时间戳来自自定义终端本机 MQTT 回调，不代表赛事引擎发布时刻。
    *          高频 CustomByteBlock 视频默认最多每秒采样一次；普通 topic
    *          仍逐条转发。
    */
@@ -413,7 +406,7 @@ private:
   void subscribeToTopics();
 
   // --- MQTT 成员变量 ---
-  MqttManager *m_mqttManager = nullptr; ///< MQTT 客户端管理器
+  MqttManager *m_mqttManager = nullptr; ///< MQTT 自定义终端管理器
   bool m_hasMqttGameStatus = false; ///< 是否已有 MQTT 比赛全局状态
   robomaster::GameStage m_lastMqttStage =
       robomaster::STAGE_NOT_STARTED; ///< 最近一次 MQTT 比赛阶段

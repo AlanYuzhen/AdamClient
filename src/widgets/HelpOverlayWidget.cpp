@@ -53,7 +53,7 @@ HelpOverlayWidget::HelpOverlayWidget(QWidget *parent) : QWidget(parent) {
   grid->setVerticalSpacing(14);
 
   grid->addWidget(createHelpItem(QStringLiteral("P"),
-                                 QStringLiteral("设置面板，可设置客户端 ID、鼠标灵敏度和自定义数据"),
+                                 QStringLiteral("设置面板，可设置自定义终端 ID、鼠标灵敏度和自定义数据"),
                                  m_panel),
                   0, 0);
   grid->addWidget(createHelpItem(QStringLiteral("~"),

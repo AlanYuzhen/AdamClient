@@ -142,7 +142,7 @@ jobs:
       - name: 检查 QML lint 基线
         run: python3 tools/release/check_qml_lint.py
 
-      - name: 编译客户端与测试目标
+      - name: 编译自定义终端与测试目标
         run: cmake --build --preset ci
 
       - name: 运行 C++ / Qt 测试

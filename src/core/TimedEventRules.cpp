@@ -104,7 +104,7 @@ QVector<TimedEventHit> tryMatchTimedEvents(int currentGameTime, int enemyOutpost
 }
 
 bool isGunnerOperator(int robotId) {
-  // 本项目用 R6/B6 作为云台手客户端身份
+  // 本项目用 R6/B6 作为云台手自定义终端身份
   // （蓝方协议 ID 为 106）。
   const int normalizedRobotId = robotId >= 100 ? robotId - 100 : robotId;
   return normalizedRobotId == 6;

@@ -5,7 +5,7 @@
 UDP数据发送器
 
 @file udp_sender.py
-@brief 将比赛状态数据通过UDP广播给客户端
+@brief 将比赛状态数据通过UDP广播给自定义终端
 @author Fudan EGA Team
 @date 2025-12-07
 @copyright Copyright (c) 2025 Fudan University EGA Team (复旦大学星云 EGA 机器人战队).
@@ -65,7 +65,7 @@ class UDPSender:
 
     def _send_packet(self, cmd_id, data):
         """
-        构造并发送简化协议帧 (自定义客户端协议)
+        构造并发送简化协议帧 (自定义终端协议)
 
         帧结构: CmdID(2B) + Length(2B) + Data(NB)
         无 CRC 校验
@@ -112,7 +112,7 @@ class UDPSender:
     def _send_global_unit_status(self, global_status):
         """
         发送 0x0003 GAME_ROBOT_HP 协议
-        UDP fallback 下按当前客户端视角发送“己方血量快照”。
+        UDP fallback 下按当前自定义终端视角发送“己方血量快照”。
         """
         robot_hp = global_status["robot_health"]
         is_blue_perspective = self.current_robot_id >= 100

@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 # ==============================================================================
-# RM26 客户端现场启动脚本 (Ubuntu)
+# RM26 自定义终端现场启动脚本 (Ubuntu)
 #
 # 用法:
 #   ./scripts/rm26-field-launch.sh                # native 模式（默认，有源码变更自动编译）
 #   ./scripts/rm26-field-launch.sh --build        # 强制重新编译后启动
 #   ./scripts/rm26-field-launch.sh --docker       # Docker field-client 模式
-#   ./scripts/rm26-field-launch.sh --stop         # 停止运行中的客户端
+#   ./scripts/rm26-field-launch.sh --stop         # 停止运行中的自定义终端
 #
 # 桌面快捷方式 / 开机自启: bash scripts/rm26-field-install.sh
 # 日志: tmp/log/field_client.log
@@ -89,7 +89,7 @@ for arg in "$@"; do
         --native)  MODE="native" ;;
         --build)   FORCE_BUILD=true ;;
         --stop)
-            log "正在停止所有客户端..."
+            log "正在停止所有自定义终端..."
             rm26_recording_stop "field_launch"
             rm26_recording_stop "run_docker"
             if [ -f "$PID_FILE" ]; then
@@ -124,7 +124,7 @@ mkdir -p "$LOG_DIR"
 if [ -f "$PID_FILE" ]; then
     OLD_PID=$(cat "$PID_FILE" 2>/dev/null || true)
     if [ -n "$OLD_PID" ] && kill -0 "$OLD_PID" 2>/dev/null; then
-        log "客户端已在运行 (PID=$OLD_PID)，跳过启动"
+        log "自定义终端已在运行 (PID=$OLD_PID)，跳过启动"
         exit 0
     fi
     rm -f "$PID_FILE"
@@ -136,7 +136,7 @@ echo $$ > "$PID_FILE"
 cleanup() {
     local exit_code=$?
     rm26_recording_stop "field_launch"
-    log "客户端退出 (exit=$exit_code)"
+    log "自定义终端退出 (exit=$exit_code)"
     rm -f "$PID_FILE"
 }
 trap cleanup EXIT INT TERM
@@ -175,7 +175,7 @@ export RM_SERVER_IP="$SERVER_IP"
 export RM_MQTT_BROKER="$MQTT_BROKER"
 export RM_CLIENT_ROBOT_ID="$ROBOT_ID"
 
-log "===== RM26 客户端启动 ====="
+log "===== RM26 自定义终端启动 ====="
 log "模式: $MODE"
 log "机器人 ID: $ROBOT_ID"
 log "服务端: $SERVER_IP"

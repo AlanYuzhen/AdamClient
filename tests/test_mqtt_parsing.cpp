@@ -89,13 +89,13 @@ void TestMqttParsing::testMqttParsing() {
     msg.set_base_health(4000);
     msg.set_base_status(1);
     msg.set_base_shield(100);
-    msg.set_outpost_health(1000);
-    msg.set_outpost_status(0);
+    msg.set_outpost_r_health(1000);
+    msg.set_outpost_r_status(0);
     msg.set_enemy_base_health(3000);
     msg.set_enemy_base_status(1);
     msg.set_enemy_base_shield(50);
-    msg.set_enemy_outpost_health(800);
-    msg.set_enemy_outpost_status(0);
+    msg.set_outpost_b_health(800);
+    msg.set_outpost_b_status(0);
     msg.add_robot_health(500);
     msg.add_robot_bullets(50);
     msg.set_total_damage_ally(1200);

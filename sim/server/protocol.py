@@ -88,7 +88,7 @@ def pack_header(data_len, seq, cmd_id):
     return struct.pack(HEADER_FMT, SOF, data_len, seq, 0, cmd_id)
 
 # =============================================================================
-# 自定义客户端协议：简化帧格式 (无 CRC 校验)
+# 自定义终端协议：简化帧格式 (无 CRC 校验)
 # =============================================================================
 # 帧结构: CmdID(2B) + Length(2B) + Data(NB)
 SIMPLE_HEADER_FMT = "<HH"  # CmdID(uint16) + Length(uint16)

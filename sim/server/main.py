@@ -5,15 +5,15 @@
 RoboMaster 2026 模拟服务器入口
 
 @file main.py
-@brief FastAPI + SocketIO 模拟服务器，用于无硬件时测试客户端
+@brief FastAPI + SocketIO 模拟服务器，用于无硬件时测试自定义终端
 @author Fudan EGA Team
 @date 2025-12-07
 @copyright Copyright (c) 2025 Fudan University EGA Team (复旦大学星云 EGA 机器人战队).
 
 功能说明:
     - StateManager: 管理比赛状态（分数、血量、阶段等）
-    - UDPSender: 通过UDP广播协议数据给客户端
-    - UDPReceiver: 接收客户端指令
+    - UDPSender: 通过UDP广播协议数据给自定义终端
+    - UDPReceiver: 接收自定义终端指令
     - VideoStreamer: 模拟视频推流
 
 使用方法:
@@ -116,7 +116,7 @@ print(f"UDP Sender: {'已启用' if args.enable_udp_sender else '已禁用 (MQTT
 # StateManager: 管理比赛状态（分数、血量、阶段等）
 state_manager = StateManager()
 state_manager.current_robot_id = args.current_robot_id
-# MQTTPublisher（可选）：向客户端发布 RobotRespawnStatus 等主题
+# MQTTPublisher（可选）：向自定义终端发布 RobotRespawnStatus 等主题
 mqtt_publisher = None
 mqtt_started = False
 try:
@@ -133,8 +133,8 @@ try:
         print("MQTTPublisher: failed to start")
 except Exception as e:
     print(f"MQTTPublisher: initialization failed - {e}")
-# UDPSender: 负责将状态数据通过 UDP 广播给客户端
-# 当 MQTT broker 不可用时，自动回退到 UDP，避免 Web 控制台只能改内存状态但客户端无任何反应。
+# UDPSender: 负责将状态数据通过 UDP 广播给自定义终端
+# 当 MQTT broker 不可用时，自动回退到 UDP，避免 Web 控制台只能改内存状态但自定义终端无任何反应。
 udp_sender = None
 enable_udp_sender = args.enable_udp_sender or not mqtt_started
 if enable_udp_sender:
@@ -143,7 +143,7 @@ if enable_udp_sender:
     )
     if not mqtt_started and not args.enable_udp_sender:
         print("UDP Sender: MQTT unavailable, fallback enabled on port 3333")
-# UDPReceiver: 负责接收客户端的指令 (可选，默认禁用以避免端口冲突)
+# UDPReceiver: 负责接收自定义终端的指令 (可选，默认禁用以避免端口冲突)
 udp_receiver = None
 if args.enable_receiver:
     udp_receiver = UDPReceiver(state_manager)
@@ -255,10 +255,10 @@ async def upload_video(file: UploadFile = File(...)):
 @sio.event
 async def connect(sid, environ):
     """
-    SocketIO 客户端连接事件
+    SocketIO 自定义终端连接事件
     当 Web 控制台连接时，发送当前的完整状态和视频列表
     """
-    print(f"客户端已连接: {sid}")
+    print(f"自定义终端已连接: {sid}")
     await sio.emit("update", _build_console_state(), to=sid)
     await sio.emit(
         "simulation_status",
@@ -270,9 +270,9 @@ async def connect(sid, environ):
 @sio.event
 async def disconnect(sid):
     """
-    SocketIO 客户端断开连接事件
+    SocketIO 自定义终端断开连接事件
     """
-    print(f"客户端已断开: {sid}")
+    print(f"自定义终端已断开: {sid}")
 
 
 @sio.event
@@ -454,7 +454,7 @@ async def referee_command(sid, data):
         # 裁判警告（黄牌/红牌/双方黄牌）
         state_manager.issue_referee_warning(data.get("level", 2), data.get("robot_id"))
         if mqtt_publisher:
-            # 触发式发送 PenaltyInfo，立即通知客户端
+            # 触发式发送 PenaltyInfo，立即通知自定义终端
             mqtt_publisher.publish_pending_warnings()
     elif cmd == "set_robot_detail":
         # 设置机器人详细状态（等级、热量、功率、射速）
@@ -863,7 +863,7 @@ async def referee_command(sid, data):
 @sio.event
 async def common_command(sid, data):
     """
-    处理来自客户端的 CommonCommand（用于 QML 中的 sendCommonCommand）
+    处理来自自定义终端的 CommonCommand（用于 QML 中的 sendCommonCommand）
     预期 data: {"cmd_type": int, "param": int}
     cmd_type 4 -> exchange_immediate_respawn
     cmd_type 3 -> confirm respawn (if completed)

@@ -18,7 +18,7 @@
 
 | 项目 | 内容 |
 | --- | --- |
-| 方向 | 赛事端到客户端，或客户端到赛事端 |
+| 方向 | 赛事端到自定义终端，或自定义终端到赛事端 |
 | transport | MQTT、UDP 或兼容路径 |
 | topic/command ID | 完整模板、阵营与机器人 ID 变量 |
 | payload | Protobuf 消息名与字段 presence 语义 |
@@ -37,7 +37,7 @@
 - golden payload 同时经过 C++ 与 Python 解析，验证跨端兼容。
 - 协议审计覆盖 `src/`、`sim/` 和公开文档，不只扫描生产 proto。
 
-客户端和模拟器均由仓库内的 canonical schema 生成协议代码。CI 使用 descriptor 对比和
+自定义终端和模拟器均由仓库内的 canonical schema 生成协议代码。CI 使用 descriptor 对比和
 wire golden 检查字段及字节兼容性；生成与验证方法见
 [Protobuf 单一 Schema 维护说明](../maintainers/protocol-convergence-plan.md)。
 

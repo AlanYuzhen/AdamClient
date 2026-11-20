@@ -26,7 +26,7 @@
 
   <rect width="1600" height="1040" fill="#ffffff"/>
   <text x="54" y="55" class="title">飞镖命中后的视图切换时序</text>
-  <text x="54" y="84" class="subtitle">事件与比赛阶段倒计时来自两条协议消息，观察时长由客户端本地规则计算</text>
+  <text x="54" y="84" class="subtitle">事件与比赛阶段倒计时来自两条协议消息，观察时长由自定义终端本地规则计算</text>
 
   <rect x="70" y="115" width="280" height="92" class="actor"/>
   <text x="210" y="153" text-anchor="middle" class="actor-title">赛事消息源</text>

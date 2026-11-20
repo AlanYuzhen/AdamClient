@@ -1,6 +1,6 @@
 # 项目文档
 
-这里是 RM26 自定义客户端、独立模拟器和工程验证资料的入口。第一次阅读可以直接按照自己的
+这里是 RM26 自定义终端、独立模拟器和工程验证资料的入口。第一次阅读可以直接按照自己的
 目标选择一条路径。
 
 这是社区独立项目，与 DJI 或 RoboMaster 无隶属或官方合作关系。协议和规则应以官方最新资料
@@ -14,7 +14,7 @@
 | 我想先看它解决什么问题 | [项目 README](../README.md) | 核心能力、系统图和已知限制 |
 | 我想在本地跑起来 | [快速开始](../README.md#快速开始) | [配置说明](getting-started/configuration.md)与[模拟器说明](../sim/README.md) |
 | 我想读懂代码和架构 | [学习路径](learning-path.md) | 架构、线程、协议和测试专题 |
-| 我想提交一个改动 | [客户端开发指南](rm26-client-dev-guide.md) | [贡献指南](../CONTRIBUTING.md) |
+| 我想提交一个改动 | [自定义终端开发指南](rm26-client-dev-guide.md) | [贡献指南](../CONTRIBUTING.md) |
 | 我负责准备正式发布 | [开源发行与打包契约](maintainers/packaging-contract.md) | [公开镜像发布手册](maintainers/public-release-runbook.md) |
 
 ## 第一次读代码
@@ -22,7 +22,7 @@
 推荐先完成[学习路径](learning-path.md)中的“10 分钟了解项目”，再选择一条真实数据链路：
 
 - MQTT/Protobuf 消息如何经过 `NetworkManager` 和 `GameData` 驱动 QML；
-- 客户端命令如何从界面经过类型化接口回到协议对端；
+- 自定义终端命令如何从界面经过类型化接口回到协议对端；
 - UDP 视频如何完成接收、组帧、解码、恢复和显示；
 - 独立模拟器如何在没有实车时提供可控输入，同时保持生产边界。
 
@@ -31,26 +31,26 @@
 
 ## 架构与数据流
 
-- [架构总览](architecture/overview.md)：正式客户端、模拟器和验证工具的整体边界；
+- [架构总览](architecture/overview.md)：正式自定义终端、模拟器和验证工具的整体边界；
 - [组件职责与数据流](architecture/data-flow.md)：消息、状态、界面、上行动作和两路视频的代码落点；
 - [传输接入与链路诊断](architecture/transport-integration.md)：MQTT、UDP、现场接入和双端证据；
 - [战术分析](architecture/tactical-analysis.md)：现有能力、数据可信边界和持久化演进方向；
 - [模拟器架构](architecture/simulator.md)：独立协议对端、组件边界和已知结构债务；
 - [线程与对象生命周期](architecture/threading-model.md)：线程归属、退出和迟到回调；
-- [协议边界与真相源](architecture/protocol-boundary.md)：官方资料、schema、客户端和模拟器的关系；
+- [协议边界与真相源](architecture/protocol-boundary.md)：官方资料、schema、自定义终端和模拟器的关系；
 - [测试与质量门](architecture/testing.md)：不同改动应提供什么证据；
 - [架构决策](decisions/README.md)：影响多个模块且需要长期保留的技术取舍。
 
 理解项目时始终保持四类边界：
 
-1. `src/` 是正式 Qt/C++ 客户端；
+1. `src/` 是正式 Qt/C++ 自定义终端；
 2. `src/devhooks/` 只提供显式启用的观测能力；
-3. `sim/` 通过协议与客户端交互，双方不共享进程内状态；
-4. `tests/` 和 `tools/release/` 用于离线验证，生产客户端运行不依赖这些目录。
+3. `sim/` 通过协议与自定义终端交互，双方不共享进程内状态；
+4. `tests/` 和 `tools/release/` 用于离线验证，生产自定义终端运行不依赖这些目录。
 
 ## 开发与验证
 
-- [客户端开发指南](rm26-client-dev-guide.md)：环境、构建、模块边界、测试、联调和排错；
+- [自定义终端开发指南](rm26-client-dev-guide.md)：环境、构建、模块边界、测试、联调和排错；
 - [配置说明](getting-started/configuration.md)：本地 `config.json`、环境变量、两路视频和模拟器联调；
 - [可选比赛音效包](getting-started/optional-audio-pack.md)：自有语音的文件名、放置方式和授权门槛；
 - [贡献指南](../CONTRIBUTING.md)：Issue、PR、配置、素材和安全要求；

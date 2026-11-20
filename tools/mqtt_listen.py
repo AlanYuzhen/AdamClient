@@ -76,7 +76,7 @@ def parse_args(argv=None):
     parser.add_argument(
         "--allow-live-connect",
         action="store_true",
-        help="确认允许连接现场 broker；同 Client ID 可能挤掉在线客户端",
+        help="确认允许连接现场 broker；同 Client ID 可能挤掉在线自定义终端",
     )
     args = parser.parse_args(argv)
 
@@ -94,7 +94,7 @@ def parse_args(argv=None):
         parser.error("Client ID 不能包含空字符")
     if not args.allow_live_connect:
         parser.error(
-            "连接现场 broker 可能挤掉相同 Client ID 的在线客户端；"
+            "连接现场 broker 可能挤掉相同 Client ID 的在线自定义终端；"
             "确认现场安全后再加 --allow-live-connect"
         )
     return args
@@ -108,7 +108,7 @@ def run_listener(args, mqtt):
 
     print(f"[{ts()}] MQTT listener — {broker}:{port}")
 
-    # 先确认端口可达，现场网络未就绪时不反复创建 MQTT 客户端。
+    # 先确认端口可达，现场网络未就绪时不反复创建 MQTT 自定义终端。
     print(f"[{ts()}] Waiting for {broker}:{port}...")
     for i in range(60):
         try:

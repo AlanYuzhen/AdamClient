@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 /**
  * @file MqttManager.cpp
- * @brief MQTT 客户端管理器实现
- * @details 封装 Eclipse Paho MQTT C 客户端，实现与裁判系统服务器的 MQTT 通信。
+ * @brief MQTT 自定义终端管理器实现
+ * @details 封装 Eclipse Paho MQTT C 自定义终端，实现与裁判系统服务器的 MQTT 通信。
  * @author Clear
  * @date 2026-02-08
  * @copyright Copyright (c) 2026 Fudan University EGA Team (复旦大学星云 EGA 机器人战队).
@@ -63,7 +63,7 @@ void MqttManager::connectToBrokerAsync(const QString &serverUri,
   m_serverUri = serverUri;
   m_clientId = clientId;
 
-  // 创建 MQTT 客户端（指定 MQTT 3.1.1 版本）
+  // 创建 MQTT 自定义终端（指定 MQTT 3.1.1 版本）
   MQTTClient_createOptions opts = MQTTClient_createOptions_initializer;
   opts.MQTTVersion = MQTTVERSION_3_1_1;
   int rc = MQTTClient_createWithOptions(&m_client, m_serverUri.toUtf8().constData(),
@@ -468,7 +468,7 @@ void MqttManager::onConnectCompleted(int rc) {
       errorDetail = QStringLiteral("MQTT transport error (rc=%1)").arg(rc);
     }
 
-    // 清理失败的客户端句柄，避免下次重连时创建新句柄导致旧句柄泄漏
+    // 清理失败的自定义终端句柄，避免下次重连时创建新句柄导致旧句柄泄漏
     if (m_client) {
       MQTTClient_destroy(&m_client);
       m_client = nullptr;
@@ -514,7 +514,7 @@ void MqttManager::tryReconnect() {
   qDebug() << "MqttManager: Attempting to reconnect...";
 
 #ifdef RM_HAS_MQTT
-  // 销毁旧客户端
+  // 销毁旧自定义终端
   if (m_client) {
     MQTTClient_destroy(&m_client);
     m_client = nullptr;

@@ -1,4 +1,4 @@
-# RM26 Custom Client — RoboMaster Operator Client and Simulator
+# RM26 Custom Terminal — RoboMaster Operator Client and Simulator
 
 [简体中文](README.md) · [English](README.en.md)
 
@@ -43,7 +43,7 @@ partnership with DJI or RoboMaster. RoboMaster, DJI, and related marks belong to
 ## Why this project exists
 
 A match produces plenty of information, while operators have very little attention to spare on the
-interface. RM26 Custom Client brings scattered inputs into one tactical picture and presents them
+interface. RM26 Custom Terminal brings scattered inputs into one tactical picture and presents them
 according to role and urgency:
 
 - **See the whole field:** combine positions, health, match state, key events, and data freshness.

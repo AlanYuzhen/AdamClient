@@ -29,13 +29,13 @@ option(RM26_ENABLE_DEVTOOLS "Enable optional RM26 development hooks" OFF)
 # 加载本机可选路径；该文件不进入版本控制。
 include(CMakeUserPaths.cmake OPTIONAL)
 
-# 客户端必需的 Qt 组件
+# 自定义终端必需的 Qt 组件
 set(_qt_required_components Core Concurrent Widgets Gui Multimedia Network SerialPort Svg Quick QuickWidgets QuickControls2)
 find_package(Qt6 REQUIRED COMPONENTS ${_qt_required_components})
 
 set(RM_HAS_QT_HTTP_SERVER OFF)
 if(RM26_ENABLE_DEVTOOLS)
-    # HttpServer 只服务于开发观测接口，正式客户端不应自动引入这个依赖。
+    # HttpServer 只服务于开发观测接口，正式自定义终端不应自动引入这个依赖。
     find_package(Qt6 REQUIRED COMPONENTS HttpServer)
     set(RM_HAS_QT_HTTP_SERVER ON)
     message(STATUS "Qt6 HttpServer (QHttpServer) found; HTTP dev hooks available")

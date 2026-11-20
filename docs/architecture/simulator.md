@@ -2,10 +2,10 @@
 
 ## 定位
 
-`sim/` 用来在没有赛事引擎、雷达和机器人硬件的环境中复现协议交互。它与正式客户端
+`sim/` 用来在没有赛事引擎、雷达和机器人硬件的环境中复现协议交互。它与正式自定义终端
 通过 MQTT、UDP 和视频链路通信，是一个独立进程，也是一组可自动化验证的测试设施。
 
-模拟器不应直接修改客户端内存，不应被链接进生产客户端，也不应成为协议的新真相源。
+模拟器不应直接修改自定义终端内存，不应被链接进生产自定义终端，也不应成为协议的新真相源。
 
 ## 当前组件
 
@@ -17,7 +17,7 @@ flowchart TB
     State --> Udp["UDPSender"]
     State --> Stream["VideoStreamer"]
     Publisher --> Broker["MQTT Broker"]
-    Broker --> Client["RM26 客户端"]
+    Broker --> Client["RM26 自定义终端"]
     Udp --> Client
     Stream --> Client
     Client -->|"CommonCommand"| Broker
@@ -26,7 +26,7 @@ flowchart TB
 
 - `server/main.py`：当前应用入口、HTTP/Socket.IO 路由和组件装配。
 - `server/state_manager.py`：模拟状态、事件队列和状态变更。
-- `server/mqtt_publisher.py`：状态发布与客户端上行命令接收。
+- `server/mqtt_publisher.py`：状态发布与自定义终端上行命令接收。
 - `server/udp_sender.py`：UDP 兼容链路。
 - `server/video_streamer.py`：文件或相机视频输入。
 - `server/static/`：浏览器控制台。
@@ -54,7 +54,7 @@ Web 路由和 MQTT 回调都可能直接修改 `StateManager` 内部结构。目
 
 ### 协议生成边界
 
-生产客户端与模拟器共用 `src/network/proto/robomaster.proto`。Python 生成代码提交到仓库，
+生产自定义终端与模拟器共用 `src/network/proto/robomaster.proto`。Python 生成代码提交到仓库，
 并由 CI 临时生成 descriptor 与 canonical schema 比对：
 
 ```mermaid
@@ -73,7 +73,7 @@ golden 和相关行为测试；生成及验证命令见
 ### UDP 帧格式并存
 
 模拟器保留简化帧与完整 CRC 帧两种路径。清理前必须分别保存 golden frame，并确认哪些
-入口仍被客户端或现场脚本使用。未知使用方的兼容代码不能凭“看起来过时”删除。
+入口仍被自定义终端或现场脚本使用。未知使用方的兼容代码不能凭“看起来过时”删除。
 
 ## 目标目录边界
 
@@ -95,7 +95,7 @@ sim/server/
 ## 安全边界
 
 - 默认运行只允许本地开发配置。
-- 任何可能向真实赛事引擎或客户端发送动作的场景都必须显式授权。
+- 任何可能向真实赛事引擎或自定义终端发送动作的场景都必须显式授权。
 - 远程地址、现场 profile、账号和运行证据不能进入公开仓库。
 - Web 输入、MQTT 输入和上传文件都要按不可信数据处理。
 

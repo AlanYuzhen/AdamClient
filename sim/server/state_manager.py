@@ -35,7 +35,7 @@ class StateManager:
         self.running = False
 
         # 按协议消息分组维护后端状态；红蓝方数据仍保留在服务端，
-        # 发送 MQTT/UDP 时再根据客户端视角转换成己方/敌方字段。
+        # 发送 MQTT/UDP 时再根据自定义终端视角转换成己方/敌方字段。
         self.game_status = self._create_game_status_state()
         self.global_logistics_status = self._create_global_logistics_status_state()
         self.global_unit_status = self._create_global_unit_status_state()
@@ -1098,10 +1098,10 @@ class StateManager:
         self.log("Referee", "比赛状态已重置")
 
     def kick_all(self):
-        """踢出所有客户端：标记 kicked_all 并推送事件"""
+        """踢出所有自定义终端：标记 kicked_all 并推送事件"""
         with self.lock:
             self.kicked_all = True
-            self.log("Referee", "踢出所有客户端")
+            self.log("Referee", "踢出所有自定义终端")
             self.event_queue.append({"id": 3001, "type": "kick_all"})
 
     def reset_all(self):
@@ -1115,7 +1115,7 @@ class StateManager:
             self.log("Referee", "全局重置，阶段回到未开始")
 
     def handle_dart_command(self, target_id, open_flag, launch_confirm, team=None):
-        """处理 DartCommand（客户端 -> 服务端）。"""
+        """处理 DartCommand（自定义终端 -> 服务端）。"""
         with self.lock:
             team_name = self._normalize_team(team or self.active_dart_team)
             dart_status = self.dart_status_by_team.setdefault(
@@ -2813,7 +2813,7 @@ class StateManager:
         self.event_queue.append({"id": 201, "robot_id": rid, "robot_index": robot_index, "is_pending": True, "type": "robot_respawn_status"})
 
     def exchange_immediate_respawn(self, robot_index):
-        """外部调用：用于客户端支付立即复活（cmd_type=4）后调用。
+        """外部调用：用于自定义终端支付立即复活（cmd_type=4）后调用。
         返回 True 表示成功，False 表示失败。
         仅当队伍金币足够且机器人处于待复活状态时生效。
         """

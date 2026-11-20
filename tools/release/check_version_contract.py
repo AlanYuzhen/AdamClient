@@ -36,7 +36,7 @@ APPLICATION_STRATEGIES = {"undecided", "single-source"}
 SIMULATOR_STRATEGIES = {"undecided", "independent", "shared"}
 EXECUTABLE_STRATEGIES = {"undecided", "legacy-compatible", "canonical-only"}
 
-# 兼容项目现有的三段 SemVer 和官方客户端风格的四段构建号。
+# 兼容项目现有的三段 SemVer 和官方自定义终端风格的四段构建号。
 VERSION_RE = re.compile(
     r"^(?:0|[1-9]\d*)(?:\.(?:0|[1-9]\d*)){2,3}"
     r"(?:-[0-9A-Za-z](?:[0-9A-Za-z.-]*[0-9A-Za-z])?)?"

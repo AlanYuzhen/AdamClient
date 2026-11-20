@@ -5,7 +5,7 @@
 视频推流模拟器 (HEVC版)
 
 @file video_streamer.py
-@brief 模拟图传视频推流，将本地视频通过UDP发送给客户端
+@brief 模拟图传视频推流，将本地视频通过UDP发送给自定义终端
 @author Fudan EGA Team
 @date 2026-02-01
 @copyright Copyright (c) 2026 Fudan University EGA Team (复旦大学星云 EGA 机器人战队).
@@ -41,7 +41,7 @@ class VideoStreamer:
     """
     HEVC 视频流推流器
 
-    使用 FFmpeg 将视频转码为 HEVC 格式，通过 UDP 发送给客户端。
+    使用 FFmpeg 将视频转码为 HEVC 格式，通过 UDP 发送给自定义终端。
     遵循官方协议：8字节包头 + HEVC 数据
     """
 
@@ -56,7 +56,7 @@ class VideoStreamer:
     def __init__(self, target_ip="127.0.0.1", port=3334, video_dir=None):
         """
         初始化推流器
-        :param target_ip: 目标 IP 地址 (客户端)
+        :param target_ip: 目标 IP 地址 (自定义终端)
         :param port: 目标端口 (官方协议: 3334)
         :param video_dir: 视频文件目录
         """

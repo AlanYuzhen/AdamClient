@@ -792,19 +792,6 @@ void NetworkManager::sendAssemblyCommand(int operation, int difficulty) {
 #endif
 }
 
-bool NetworkManager::sendAirSupportCommand(int commandId) {
-#ifdef RM_HAS_MQTT
-  Q_UNUSED(commandId);
-  qWarning() << "NetworkManager: AirSupportCommand is not defined by the 2027 custom-terminal command table";
-  return false;
-  return false;
-#else
-  Q_UNUSED(commandId);
-  qWarning() << "NetworkManager: MQTT not available in this build, dropping AirSupportCommand";
-  return false;
-#endif
-}
-
 void NetworkManager::sendRobotPerformanceSelection(uint32_t shooter, uint32_t chassis, uint32_t sentryControl) {
 #ifdef RM_HAS_MQTT
   if (shouldThrottleCommand(m_lastPerformanceSelectionSentMs, 100)) {
@@ -855,44 +842,6 @@ bool NetworkManager::sendSentryCtrlCommand(uint32_t commandId) {
 #endif
 }
 
-void NetworkManager::sendHeroDeployMode(uint32_t mode) {
-#ifdef RM_HAS_MQTT
-  Q_UNUSED(mode);
-  qWarning() << "NetworkManager: HeroDeployModeEventCommand is not defined by the 2027 custom-terminal command table";
-  return;
-
-  robomaster::HeroDeployModeEventCommand cmd;
-  cmd.set_mode(mode);
-
-  // proto3 中标量字段取默认值 0 时，合法序列化结果可能是“空 payload”。
-  // 英雄退出部署命令 mode=0 就属于这种情况，不能把空 payload 误判成失败。
-  std::string buffer;
-  if (!cmd.SerializeToString(&buffer)) {
-    qWarning() << "NetworkManager: Failed to serialize HeroDeployModeEventCommand protobuf";
-    return;
-  }
-  const QByteArray payload(buffer.data(), static_cast<int>(buffer.size()));
-
-  if (m_mqttManager && m_mqttManager->isConnected()) {
-    if (!m_mqttManager->publish(QStringLiteral("HeroDeployModeEventCommand"),
-                                payload, 1)) {
-      qWarning() << "NetworkManager: Failed to publish HeroDeployModeEventCommand"
-                 << "mode=" << mode << "payloadSize=" << payload.size();
-      return;
-    }
-    emit dataSent(payload);
-    qInfo() << "NetworkManager: Published HeroDeployModeEventCommand via MQTT"
-            << "mode=" << mode << "bytes=" << payload.size();
-    return;
-  }
-
-  qWarning() << "NetworkManager: MQTT not connected, dropping HeroDeployModeEventCommand";
-#else
-  Q_UNUSED(mode);
-  qWarning() << "NetworkManager: MQTT not available in this build, dropping HeroDeployModeEventCommand";
-#endif
-}
-
 void NetworkManager::sendRuneActivate(uint32_t activate) {
 #ifdef RM_HAS_MQTT
   if (shouldThrottleCommand(m_lastRuneActivateSentMs, 100)) {
@@ -924,7 +873,7 @@ void NetworkManager::sendRuneActivate(uint32_t activate) {
 }
 
 /**
- * @brief 发送客户端状态信息
+ * @brief 发送自定义终端状态信息
  * @details 旧版 UDP 接口。
  *          2027 自定义终端不通过 UDP 发送 ClientStatus。
  *
@@ -1209,18 +1158,18 @@ void NetworkManager::processMqttMessage(const QString &topic,
                          static_cast<int>(msg.base_health())},
                         {QStringLiteral("enemy_base_health"),
                          static_cast<int>(msg.enemy_base_health())},
-                        {QStringLiteral("outpost_health"),
-                         static_cast<int>(msg.outpost_health())},
-                        {QStringLiteral("enemy_outpost_health"),
-                         static_cast<int>(msg.enemy_outpost_health())},
+                        {QStringLiteral("outpost_r_health"),
+                         static_cast<int>(msg.outpost_r_health())},
+                        {QStringLiteral("outpost_b_health"),
+                         static_cast<int>(msg.outpost_b_health())},
                         {QStringLiteral("base_status"),
                          static_cast<int>(msg.base_status())},
                         {QStringLiteral("enemy_base_status"),
                          static_cast<int>(msg.enemy_base_status())},
-                        {QStringLiteral("outpost_status"),
-                         static_cast<int>(msg.outpost_status())},
-                        {QStringLiteral("enemy_outpost_status"),
-                         static_cast<int>(msg.enemy_outpost_status())},
+                        {QStringLiteral("outpost_r_status"),
+                         static_cast<int>(msg.outpost_r_status())},
+                        {QStringLiteral("outpost_b_status"),
+                         static_cast<int>(msg.outpost_b_status())},
                         {QStringLiteral("base_shield"),
                          static_cast<int>(msg.base_shield())},
                         {QStringLiteral("enemy_base_shield"),
@@ -1235,16 +1184,16 @@ void NetworkManager::processMqttMessage(const QString &topic,
         for (int i = 0; i < msg.robot_bullets_size(); ++i) rBul << QString::number(msg.robot_bullets(i));
         qInfo().noquote()
             << QStringLiteral("[GlobalUnitStatus] base_hp=%1 base_status=%2 base_shield=%3 "
-                              "outpost_hp=%4 outpost_status=%5 "
+                              "outpost_R_hp=%4 outpost_r_status=%5 "
                               "enemy_base_hp=%6 enemy_base_status=%7 enemy_base_shield=%8 "
-                              "enemy_outpost_hp=%9 enemy_outpost_status=%10 "
+                              "outpost_B_hp=%9 outpost_b_status=%10 "
                               "robot_hp=[%11] robot_bullets=[%12] "
                               "dmg_ally=%13 dmg_enemy=%14")
                    .arg(msg.base_health()).arg(msg.base_status())
-                   .arg(msg.base_shield()).arg(msg.outpost_health())
-                   .arg(msg.outpost_status()).arg(msg.enemy_base_health())
+                   .arg(msg.base_shield()).arg(msg.outpost_r_health())
+                   .arg(msg.outpost_r_status()).arg(msg.enemy_base_health())
                    .arg(msg.enemy_base_status()).arg(msg.enemy_base_shield())
-                   .arg(msg.enemy_outpost_health()).arg(msg.enemy_outpost_status())
+                   .arg(msg.outpost_b_health()).arg(msg.outpost_b_status())
                    .arg(rHp.join(QStringLiteral(",")))
                    .arg(rBul.join(QStringLiteral(",")))
                    .arg(msg.total_damage_ally()).arg(msg.total_damage_enemy());
@@ -1740,7 +1689,7 @@ void NetworkManager::processMqttMessage(const QString &topic,
         map["current_respawn_progress"] = static_cast<uint32_t>(respMsg.current_respawn_progress());
       }
 
-      // 布尔/费用字段始终透传，确保客户端状态严格跟随上游消息。
+      // 布尔/费用字段始终透传，确保自定义终端状态严格跟随上游消息。
       map["can_free_respawn"] = respMsg.can_free_respawn();
       map["gold_cost_for_respawn"] = static_cast<uint32_t>(respMsg.gold_cost_for_respawn());
       map["can_pay_for_respawn"] = respMsg.can_pay_for_respawn();

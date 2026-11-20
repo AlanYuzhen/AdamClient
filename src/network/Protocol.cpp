@@ -131,7 +131,7 @@ bool Protocol::parsePacket(const QByteArray &packet,
     payload = QByteArray(packet.constData() + sizeof(FrameHeader), dataLen);
   } else {
     // -------------------------------------------------------------------------
-    // 自定义客户端协议：简化帧格式 (无 CRC 校验)
+    // 自定义终端协议：简化帧格式 (无 CRC 校验)
     // 帧结构: CmdID(2B) + Length(2B) + Data(NB)
     // -------------------------------------------------------------------------
 
@@ -340,12 +340,13 @@ bool Protocol::parsePacket(const QByteArray &packet,
     game_robot_HP_t data;
     if (deserialize(payload, data)) {
       // UDP 兜底链路将 0x0003 的“己方视角”血量转为 GlobalUnitStatus。
-      // 客户端再根据 currentRobotId 解释为红/蓝方己方。
+      // 自定义终端再根据 currentRobotId 解释为红/蓝方己方。
       auto *status = message.mutable_global_unit_status();
       status->set_base_health(data.ally_base_HP);
       status->set_base_status(data.ally_base_HP == 0 ? 3 : 1);
-      status->set_outpost_health(data.ally_outpost_HP);
-      status->set_outpost_status(data.ally_outpost_HP == 0 ? 3 : 1);
+      // 2027 的 outpost 字段是固定的 R/B 前哨（不随视角互换），
+      // 0x0003 只有己方视角数据、拿不到红蓝身份，因此 UDP 兜底链路不再伪造前哨血量。
+      // 正式链路以 MQTT GlobalUnitStatus 为准。
       status->add_robot_health(data.ally_1_robot_HP);
       status->add_robot_health(data.ally_2_robot_HP);
       status->add_robot_health(data.ally_3_robot_HP);
@@ -599,7 +600,7 @@ bool Protocol::parsePacket(const QByteArray &packet,
       memcpy(payload.data(), &raw, sizeof(MapMarkRaw));
     }
     // ---------------------------------------------------------------------------
-    // client_status: 客户端状态（暂不支持二进制序列化）
+    // client_status: 自定义终端状态（暂不支持二进制序列化）
     // ---------------------------------------------------------------------------
     else if (message.has_client_status()) {
       return QByteArray(); // 返回空，表示不支持
@@ -612,7 +613,7 @@ bool Protocol::parsePacket(const QByteArray &packet,
     }
 
     // -------------------------------------------------------------------------
-    // 构造完整协议帧 (自定义客户端协议：简化格式)
+    // 构造完整协议帧 (自定义终端协议：简化格式)
     // -------------------------------------------------------------------------
     // 帧结构：CmdID(2B) + Length(2B) + Data(NB)
     QByteArray frame;

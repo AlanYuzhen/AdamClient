@@ -6,7 +6,7 @@
  *          选择对应选项则发送相应的CommonCommand指令给服务器
  *          读条结束后标题变为"复活读条完成"，"免费复活"选项将变为可选
  *          弹窗背景图片使用"qrc:/images/prep_phase_frame.png"，带半透明遮罩背景，弹窗布局以及代码格式均参考PrepPhasePopup.qml
- *     指令名：RobotRespawnStatus，机器人复活状态同步，服务器→自定义客户端（在mqtt_publisher里增加发布信息）
+ *     指令名：RobotRespawnStatus，机器人复活状态同步，服务器→自定义终端（在mqtt_publisher里增加发布信息）
  *     message RobotRespawnStatus {
  *          bool is_pending_respawn = 1; // 是否处于待复活状态
  *          uint32 total_respawn_progress = 2; // 复活所需总读条
@@ -16,7 +16,7 @@
  *          bool can_pay_for_respawn = 6; // 是否允许花费金币复活
  *          }
  *     指令名：RobotRespawnStatus
- *     指令名：CommonCommand，机器人多种常用指令，自定义客户端→服务器，触发式发送，发送频率最高为 10Hz
+ *     指令名：CommonCommand，机器人多种常用指令，自定义终端→服务器，触发式发送，发送频率最高为 10Hz
  *     cmd_type 枚举值：
  *     3：确认复活（若此时复活读条完成将立即复活）
  *     4：兑换立即复活（若此时符合兑换立即复活的规则要求，则会立即消耗金币兑换立即复活）

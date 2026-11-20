@@ -81,5 +81,5 @@
   <text x="800" y="747" text-anchor="middle" class="box-sub">根据模式与赛事事件选择前台画面</text>
   <path d="M710 690 C620 640, 1240 650, 1352 610" class="control"/>
   <path d="M890 690 C1020 640, 1250 375, 1352 310" class="control"/>
-  <text x="54" y="798" class="note">测量边界说明：图中只描述客户端进程内处理，不代表相机采集到屏幕显示的端到端时延。</text>
+  <text x="54" y="798" class="note">测量边界说明：图中只描述自定义终端进程内处理，不代表相机采集到屏幕显示的端到端时延。</text>
 </svg>

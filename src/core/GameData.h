@@ -226,7 +226,7 @@ struct RobotData {
   quint16 launchingFrequency; // 当前射速 (发/秒)
   quint16 tabShootSpeedLimit; // Tab 面板射速上限显示值（m/s，工程为 0）
   quint16 firerate;           // 射速 (发/秒，兼容旧代码)
-  bool isClientConnected;     // 客户端是否已连接
+  bool isClientConnected;     // 自定义终端是否已连接
   bool isControllerConnected; // 遥控器是否已连接
   bool canRemoteAmmo;         // RobotDynamicStatus.can_remote_ammo：可远程兑换弹丸
   bool canRemoteHeal;         // RobotDynamicStatus.can_remote_heal：可远程兑换血量

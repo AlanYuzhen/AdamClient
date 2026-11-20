@@ -49,7 +49,7 @@ body:
     attributes:
       label: 主要范围
       options:
-        - 客户端界面或交互
+        - 自定义终端界面或交互
         - 核心状态或业务逻辑
         - MQTT、UDP 或协议处理
         - 视频接收或解码

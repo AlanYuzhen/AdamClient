@@ -438,7 +438,7 @@ Item {
                 }
             }
 
-            // 血条：参照官方客户端比例缩小
+            // 血条：参照官方自定义终端比例缩小
             Item {
                 id: hpBar
                 anchors.left: parent.left

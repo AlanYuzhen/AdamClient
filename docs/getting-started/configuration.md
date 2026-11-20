@@ -1,6 +1,6 @@
 # 配置说明
 
-客户端从根目录的 `config.json` 读取本地运行参数；公开仓库只提供脱敏的
+自定义终端从根目录的 `config.json` 读取本地运行参数；公开仓库只提供脱敏的
 `config.example.json`。第一次构建前先复制一份，再按自己的本机环境修改。赛事地址、机器人
 身份、账号、密钥、本地绝对路径和比赛记录都不应进入提交。
 
@@ -24,12 +24,12 @@ python tools/release/check_example_config.py config.json
 地址、相对路径和中性身份，现场配置应在受控环境单独校验。
 
 缺少本地配置时，CMake 会用公开模板生成构建目录中的安全配置。需要调整网络或视频参数时，
-先复制模板，并在修改后重新构建或同步配置，再重启客户端。
+先复制模板，并在修改后重新构建或同步配置，再重启自定义终端。
 
 ### Docker 配置
 
 Docker 构建上下文同样忽略 `config.json`，镜像只会使用公开示例完成编译，不会把本机现场参数写进
-镜像层。通过 `run_docker.sh` 或 Compose 启动客户端前，应先生成本地配置；Compose 会把它只读挂载
+镜像层。通过 `run_docker.sh` 或 Compose 启动自定义终端前，应先生成本地配置；Compose 会把它只读挂载
 到容器内：
 
 ```bash
@@ -40,7 +40,7 @@ cp config.example.json config.json
 如果直接使用 `docker compose`，也必须先准备根目录 `config.json`。不要把真实配置写进 Dockerfile、
 镜像参数或可共享的 `.env` 文件；现场变量应只在受控主机上设置。
 
-## 客户端会到哪里找配置
+## 自定义终端会到哪里找配置
 
 `ConfigManager` 默认请求 `config.json`，`ConfigLoader` 依次检查：
 
@@ -49,8 +49,8 @@ cp config.example.json config.json
 3. macOS 应用包的 `Contents/Resources`；
 4. 当前工作目录的上一级目录。
 
-日志中的“找到配置文件”会给出最终路径。客户端会监视已加载文件并尝试重新读取，但 MQTT、UDP
-和视频服务不会因为每个字段变化而完整重建连接；修改通信参数后请重启客户端，避免新旧连接
+日志中的“找到配置文件”会给出最终路径。自定义终端会监视已加载文件并尝试重新读取，但 MQTT、UDP
+和视频服务不会因为每个字段变化而完整重建连接；修改通信参数后请重启自定义终端，避免新旧连接
 混用。
 
 ## 配置优先级
@@ -80,7 +80,7 @@ cp config.example.json config.json
 | `RM_HERO_CAMERA_GRID` | `video.industrial_camera_grid` | 未设置，读取 JSON 中的 `false` |
 
 `RM_CLIENT_ROBOT_ID` 与 JSON 字段使用相同范围：红方 `1`–`7`、蓝方 `101`–`107`。其他值会被忽略，
-客户端回到本地配置或安全默认身份，避免界面标签与 MQTT client ID 静默错位。
+自定义终端回到本地配置或安全默认身份，避免界面标签与 MQTT client ID 静默错位。
 
 `RM_HERO_CAMERA_GRID` 的 `1`、`true`、`yes`、`on`（不区分大小写）表示开启；其他非空值表示
 关闭。`0.0.0.0` 只表示 UDP 接收端监听本机所有网卡，不能作为服务器、Broker 或发送目标。
@@ -95,15 +95,15 @@ cp config.example.json config.json
 
 | 字段 | 公开示例值 | 当前用途 |
 | --- | --- | --- |
-| `app_settings.client_name` | `RM26 Custom Client` | 兼容元数据访问器；当前 Qt 应用元数据仍在入口代码中设置 |
+| `app_settings.client_name` | `RM26 Custom Terminal` | 兼容元数据访问器；当前 Qt 应用元数据仍在入口代码中设置 |
 | `app_settings.version` | `1.0.0` | 配置版本访问器与版本一致性检查，代码回退同为 `1.0.0` |
 | `window.min_width` / `min_height` | `1280` / `720` | 主窗口最小尺寸，代码回退分别为 `1280`、`720` |
 | `window.default_width` / `default_height` | `1920` / `1080` | 保留的兼容字段；当前启动尺寸按屏幕计算 |
 | `window.fullscreen` | `true` | 保留的兼容字段；当前程序入口固定全屏启动 |
-| `ui_text.window_title` | `RM26 Custom Client` | 当前主窗口标题 |
+| `ui_text.window_title` | `RM26 Custom Terminal` | 当前主窗口标题 |
 | `ui_text` 其余文本 | 见示例文件 | 兼容界面文案；当前主要界面尚未全部通过这些键取值 |
 
-JSON 中的 `_comment` 只是给使用者看的说明，客户端不会把它当作配置项处理。
+JSON 中的 `_comment` 只是给使用者看的说明，自定义终端不会把它当作配置项处理。
 
 ### `network`
 
@@ -111,13 +111,13 @@ JSON 中的 `_comment` 只是给使用者看的说明，客户端不会把它当
 | --- | --- | --- | --- |
 | `server_ip` | `127.0.0.1` | `127.0.0.1` | UDP 兼容链路和命令目标地址 |
 | `server_port` | `3333` | `20000` | 服务端 UDP 目标端口 |
-| `client_port` | `3333` | `10000` | 未启用 MQTT 时的客户端 UDP 监听端口 |
+| `client_port` | `3333` | `10000` | 未启用 MQTT 时的自定义终端 UDP 监听端口 |
 | `video_port` | `3334` | `3334` | `stream_url` 缺失时生成主图传 UDP URL 的端口；公开检查要求两者一致 |
 | `mqtt_broker` | `127.0.0.1` | `127.0.0.1` | MQTT Broker 地址 |
 | `mqtt_port` | `3333` | `1883` | MQTT Broker 端口 |
-| `client_robot_id` | `1` | `1` | 客户端机器人身份；只接受红方 `1`–`7` 或蓝方 `101`–`107` |
+| `client_robot_id` | `1` | `1` | 自定义终端机器人身份；只接受红方 `1`–`7` 或蓝方 `101`–`107` |
 
-构建时如果没有找到 Paho MQTT C，客户端不会启用完整 MQTT 链路。此时界面仍可启动，但 MQTT
+构建时如果没有找到 Paho MQTT C，自定义终端不会启用完整 MQTT 链路。此时界面仍可启动，但 MQTT
 比赛状态和工业相机图传不会工作；请先确认 CMake 输出中已找到 Paho，再排查配置。
 
 ### `video`
@@ -163,7 +163,7 @@ AR 只有在构建时找到 ONNX Runtime、生成 `RM_HAS_AR_OVERLAY` 能力并�
 
 ## 两路视频怎样配置
 
-两路视频共用客户端中的接收与解码组件，但传输方式不同：
+两路视频共用自定义终端中的接收与解码组件，但传输方式不同：
 
 | 链路 | 编码与传输 | 配置入口 | 模拟器入口 |
 | --- | --- | --- | --- |
@@ -172,14 +172,14 @@ AR 只有在构建时找到 ONNX Runtime、生成 `RM_HAS_AR_OVERLAY` 能力并�
 
 因此，不要为工业相机自行增加 `3335` 之类的端口。主图传看不到画面时检查 UDP `3334`；工业
 相机看不到画面时检查 Paho MQTT 是否启用、Broker 是否连通、`CustomByteBlock` 是否到达，以及
-客户端和模拟器是否使用同一机器人视角。
+自定义终端和模拟器是否使用同一机器人视角。
 
 ## 本地模拟器联调
 
 下面是一套与公开示例一致的本机参数：MQTT `127.0.0.1:3333`、机器人 ID `1`、主图传 UDP
 `3334`、Web 控制台 `8000`。
 
-1. 先按本文生成 `config.json`，再构建并启动客户端。
+1. 先按本文生成 `config.json`，再构建并启动自定义终端。
 2. 安装模拟器依赖：
 
    ```bash
@@ -200,10 +200,10 @@ AR 只有在构建时找到 ONNX Runtime、生成 `RM_HAS_AR_OVERLAY` 能力并�
    ```
 
    脚本会优先复用已经监听该端口的 Broker，并尝试启动本机 Mosquitto；若回退到 Docker Broker，
-   终端会打印实际映射端口。此时必须把客户端的 `RM_MQTT_PORT` 或 `network.mqtt_port` 改成同一个
+   终端会打印实际映射端口。此时必须把自定义终端的 `RM_MQTT_PORT` 或 `network.mqtt_port` 改成同一个
    端口后重启。
 
-4. 打开 `http://127.0.0.1:8000`，从 Web 控制台发送比赛状态，确认客户端收到数据。
+4. 打开 `http://127.0.0.1:8000`，从 Web 控制台发送比赛状态，确认自定义终端收到数据。
 
 需要同时模拟主图传时，先停止上面的模拟器，再用自己有权使用的视频重新启动：
 
@@ -220,7 +220,7 @@ AR 只有在构建时找到 ONNX Runtime、生成 `RM_HAS_AR_OVERLAY` 能力并�
 再在“工业相机”区域开始推流；该链路通过同一个 MQTT Broker 发送。
 
 模拟器连接 Broker 失败时会保留兼容 UDP 回退，但这不能证明 MQTT 或第二路视频已经联通。联调
-时应先让客户端和模拟器日志都确认同一 Broker、端口和机器人 ID，再分别加入主图传与工业相机。
+时应先让自定义终端和模拟器日志都确认同一 Broker、端口和机器人 ID，再分别加入主图传与工业相机。
 
 ## 敏感信息与提交检查
 
@@ -244,12 +244,12 @@ python3 tools/release/check_public_readiness.py
 ### 修改配置后程序仍使用旧值
 
 先从启动日志确认实际加载路径，再检查可执行文件旁边是否留有旧 `config.json`，以及当前终端是否
-设置了 `RM_*` 环境变量。通信参数修改后重启客户端。
+设置了 `RM_*` 环境变量。通信参数修改后重启自定义终端。
 
-### 客户端能打开但没有比赛状态
+### 自定义终端能打开但没有比赛状态
 
 界面启动不等于通信链路已连通。依次确认构建时已启用 MQTT、Broker 正在监听、两端端口一致、
-机器人 ID 一致，再查看模拟器和客户端日志。不要一次同时修改 MQTT、UDP 和两路视频参数。
+机器人 ID 一致，再查看模拟器和自定义终端日志。不要一次同时修改 MQTT、UDP 和两路视频参数。
 
 ### 主图传正常，工业相机没有画面
 

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ==============================================================================
-# RM26 客户端桌面集成安装脚本 (Ubuntu)
+# RM26 自定义终端桌面集成安装脚本 (Ubuntu)
 #
 # 功能:
 #   1. 生成带正确绝对路径的 .desktop 文件
@@ -77,10 +77,10 @@ chmod +x "$LAUNCH_SCRIPT"
 # 生成 .desktop 文件 (使用绝对路径)
 DESKTOP_CONTENT="[Desktop Entry]
 Version=1.0
-Name=RM26 客户端
-Name[zh_CN]=RM26 自定义客户端
+Name=RM26 自定义终端
+Name[zh_CN]=RM26 自定义终端
 Comment=FDU EGA RoboMaster 2026 Custom Client
-Comment[zh_CN]=复旦大学 EGA RoboMaster 2026 自定义客户端
+Comment[zh_CN]=复旦大学 EGA RoboMaster 2026 自定义终端
 Exec=$LAUNCH_SCRIPT
 Icon=$ICON_PATH
 Type=Application
@@ -113,7 +113,7 @@ fi
 
 echo ""
 info "===== 安装完成 ====="
-echo "  - 桌面快捷方式: 双击桌面上的 \"RM26 客户端\" 图标"
+echo "  - 桌面快捷方式: 双击桌面上的 \"RM26 自定义终端\" 图标"
 echo "  - 应用菜单: 搜索 \"RM26\""
 if [ "$INSTALL_AUTOSTART" = true ]; then
     echo "  - 开机自启动: 下次重启自动运行"

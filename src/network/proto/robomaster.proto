@@ -403,23 +403,26 @@ message GameStatus {
   optional uint32 end_reason = 10;
 }
 
+// 2027 协议 2.2.4：1/3 为己方（按视角）基地血量与阵地控制状态，6/8 为对方；
+// 4/5、9/10 固定为 R / B 前哨（开局地理身份，不随红蓝视角变化）；
+// 11 按「己方 1/3/4/7、对方 1/3/4/7」顺序；12 只发己方剩余累计发弹量。
 message GlobalUnitStatus {
   optional uint32 base_health = 1;
   optional uint32 base_status = 2;
-  optional uint32 base_shield = 3;
-  optional uint32 outpost_health = 4;
-  optional uint32 outpost_status = 5;
+  optional uint32 base_shield = 3;       // 己方基地阵地控制状态（非护盾值）
+  optional uint32 outpost_R_health = 4;  // R 前哨站血量（固定红方）
+  optional uint32 outpost_R_status = 5;  // R 前哨阵地控制状态
   optional uint32 enemy_base_health = 6;
   optional uint32 enemy_base_status = 7;
-  optional uint32 enemy_base_shield = 8;
-  optional uint32 enemy_outpost_health = 9;
-  optional uint32 enemy_outpost_status = 10;
+  optional uint32 enemy_base_shield = 8; // 对方基地阵地控制状态
+  optional uint32 outpost_B_health = 9;  // B 前哨站血量（固定蓝方）
+  optional uint32 outpost_B_status = 10; // B 前哨阵地控制状态
   repeated uint32 robot_health = 11;
-  repeated int32 robot_bullets = 12;
+  repeated int32 robot_bullets = 12;     // 仅己方
   optional uint32 total_damage_ally = 13;
   optional uint32 total_damage_enemy = 14;
-  optional uint32 total_cp_ally = 15; // 2027 累计控制点
-  optional uint32 total_cp_enemy = 16;
+  optional uint32 total_CP_ally = 15;    // 2027 累计控制度（己方）
+  optional uint32 total_CP_enemy = 16;   // 2027 累计控制度（对方）
 }
 
 message GlobalLogisticsStatus {

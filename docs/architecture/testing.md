@@ -82,7 +82,7 @@ ctest --preset ci --no-tests=error --timeout 120
 ```
 
 该 Preset 固定 Ninja、`build/ci`、ccache 和四路构建。Ubuntu 任务还统一使用 offscreen 与软件
-渲染，并安装客户端实际 import 的 QML 模块。普通本地开发继续使用 `dev` 或 `release`，不需要
+渲染，并安装自定义终端实际 import 的 QML 模块。普通本地开发继续使用 `dev` 或 `release`，不需要
 为了 CI 改变生成器。
 
 工作流文件和本地命令通过不等于远端 Linux 已验证。首次推送后仍需保存真实 Actions 运行记录；

@@ -4,7 +4,7 @@
 
 /**
  * @file MqttClient.h
- * @brief MQTT 客户端封装（可选启用）
+ * @brief MQTT 自定义终端封装（可选启用）
  * @author
  * @date 2026-02-04
  * @copyright Copyright (c) 2026 Fudan University EGA Team (复旦大学星云 EGA 机器人战队).
@@ -46,7 +46,7 @@ namespace RM {
 
 /**
  * @class MqttClient
- * @brief MQTT 客户端，负责连接、订阅、解析消息并分发到 GameData
+ * @brief MQTT 自定义终端，负责连接、订阅、解析消息并分发到 GameData
  */
 class MqttClient : public QObject {
   Q_OBJECT
@@ -101,7 +101,7 @@ private:
 
 #ifdef RM_HAS_QT_MQTT
   // --- MQTT 组件 ---
-  QMqttClient *m_client = nullptr;        // MQTT 客户端对象
+  QMqttClient *m_client = nullptr;        // MQTT 自定义终端对象
 #endif
 
   QString m_clientId;                     // 自定义 clientId（为空时使用默认值）

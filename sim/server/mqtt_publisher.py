@@ -5,7 +5,7 @@
 MQTT数据发布器
 
 @file mqtt_publisher.py
-@brief 将比赛状态数据通过MQTT发布给客户端
+@brief 将比赛状态数据通过MQTT发布给自定义终端
 @author Fudan EGA Team
 @date 2026-02-08
 @copyright Copyright (c) 2026 Fudan University EGA Team (复旦大学星云 EGA 机器人战队).
@@ -28,7 +28,7 @@ from typing import TYPE_CHECKING, Optional
 
 from google.protobuf.message import Message
 
-# MQTT 客户端
+# MQTT 自定义终端
 try:
     import paho.mqtt.client as mqtt
 except ImportError:
@@ -59,8 +59,8 @@ class MQTTPublisher:
     """
     MQTT 数据发布器
 
-    按照官方《RoboMaster 2026 通信协议 V2.0.0》的自定义客户端协议规范，
-    通过 MQTT 发布比赛数据到客户端。
+    按照官方《RoboMaster 2026 通信协议 V2.0.0》的自定义终端协议规范，
+    通过 MQTT 发布比赛数据到自定义终端。
 
     主要 Topic:
         - GameStatus: 比赛全局状态 (5Hz)
@@ -107,7 +107,7 @@ class MQTTPublisher:
         @param state_manager: 状态管理器，提供比赛数据
         @param broker_host: MQTT Broker 地址
         @param broker_port: MQTT Broker 端口
-        @param client_id: 客户端 ID
+        @param client_id: 自定义终端 ID
         """
         self.state_manager = state_manager
         self.broker_host = broker_host
@@ -127,7 +127,7 @@ class MQTTPublisher:
         self._init_client()
 
     def _init_client(self):
-        """初始化 MQTT 客户端"""
+        """初始化 MQTT 自定义终端"""
         if mqtt is None:
             print("MQTTPublisher: paho-mqtt 未安装，MQTT 功能禁用")
             return
@@ -145,7 +145,7 @@ class MQTTPublisher:
                 "MQTTPublisher: 已连接到 "
                 f"{self.broker_host}:{self.broker_port}, current_robot_id={self.current_robot_id}"
             )
-            # 订阅官方 V2.0.0 自定义客户端上行 topic
+            # 订阅官方 V2.0.0 自定义终端上行 topic
             for topic in (
                 "KeyboardMouseControl",
                 "CustomControl",
@@ -169,7 +169,7 @@ class MQTTPublisher:
         print(f"MQTTPublisher: 连接断开, rc={rc}")
 
     def _on_message(self, client, userdata, msg):
-        """消息接收回调 - 处理客户端发来的控制指令"""
+        """消息接收回调 - 处理自定义终端发来的控制指令"""
         print(f"MQTTPublisher: 收到消息 [{msg.topic}]: {len(msg.payload)} bytes")
         topic = msg.topic
         payload = msg.payload
@@ -871,7 +871,7 @@ class MQTTPublisher:
         total_damage_blue = int(status.get("total_damage_blue", 0))
 
         is_blue_perspective = int(self.current_robot_id or 1) >= 100
-        # 己方和敌方各补齐到 5 台机器人，使客户端采用中型阵容（5+5），
+        # 己方和敌方各补齐到 5 台机器人，使自定义终端采用中型阵容（5+5），
         # 避免把紧凑阵容（3+3）误判为仅己方的扩展阵容。
         # 红方编号为 {1,2,3,4,7}，蓝方编号为 {101,102,103,104,107}。
         if is_blue_perspective:
@@ -1358,7 +1358,7 @@ class MQTTPublisher:
         发布工业相机 H.264 视频分片
 
         Topic: CustomByteBlock
-        客户端 NetworkManager 解析 CustomByteBlock.data 后转发给 VideoReceiver::feedH264Frame。
+        自定义终端 NetworkManager 解析 CustomByteBlock.data 后转发给 VideoReceiver::feedH264Frame。
         分片格式: [H264 字节] + [末尾 1 字节 packetId]，qos=0 模拟图传不可靠传输、避免过期分片重传。
         """
         if pb is None:
@@ -1643,7 +1643,7 @@ class MQTTPublisher:
     def publish_pending_warnings(self):
         """
         立即发布所有待处理的警告事件（PenaltyInfo）。
-        触发式发送，用于裁判警告操作时立即通知客户端。
+        触发式发送，用于裁判警告操作时立即通知自定义终端。
         """
         self._publish_pending_warnings()
 

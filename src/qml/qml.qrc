@@ -5,8 +5,6 @@
         <file>FpsDisplay.qml</file>
         <file>DamagePanel.qml</file>
         <file>ExchangePanel.qml</file>
-        <file>ExchangePanelEngineer.qml</file>
-        <file>ExchangePanelAerial.qml</file>
         <file>RobotStatsRow.qml</file>
         <file>RobotStatsTable.qml</file>
         <file>SettingsPanel.qml</file>
@@ -23,7 +21,6 @@
         <file>EventMessagePanel.qml</file>
         <file>AuxiliaryShootingPanel.qml</file>
         <file>AmmoSupplyPanel.qml</file>
-        <file>DeployModePanel.qml</file>
         <file>CentralAimingHUD.qml</file>
         <file>Countdown.qml</file>
         <file>RobotRespawn.qml</file>

@@ -82,7 +82,7 @@ struct FrameHeader {
 
 /**
  * @struct SimpleFrameHeader
- * @brief 自定义客户端协议帧头（简化版）
+ * @brief 自定义终端协议帧头（简化版）
  * @details 用于 UDP 网络通信，无 CRC 校验
  *          帧格式: CmdID(2B) + Length(2B) + Data(NB)
  */
@@ -114,7 +114,7 @@ enum class CmdID : quint16 {
   BULLET_REMAINING = 0x0208,  // 允许发弹量 (8字节)
   GROUND_ROBOT_POSITION = 0x020B, // 己方地面机器人位置 (40字节)
   RFID_STATUS = 0x0209,       // RFID状态 (5字节)
-  DART_CLIENT_CMD = 0x020A,   // 飞镖客户端指令
+  DART_CLIENT_CMD = 0x020A,   // 飞镖自定义终端指令
 
   RADAR_MARK_DATA = 0x020D,   // 雷达标记数据/哨兵与能量机关信息 (6字节)
   MAP_INTERACTION = 0x0301,   // 小地图交互数据
@@ -356,7 +356,7 @@ struct RobotStatusData {
   quint16 bulletCount;              // 弹药数量
   quint16 bulletLimit;              // 弹药上限
   quint8 status;                    // 机器人状态
-  quint8 isClientConnected : 1;     // 客户端连接状态
+  quint8 isClientConnected : 1;     // 自定义终端连接状态
   quint8 isControllerConnected : 1; // 控制器连接状态
   quint8 reserved : 6;              // 保留位
 };

@@ -1,6 +1,6 @@
 /**
  * @file MqttClient.cpp
- * @brief MQTT 客户端实现
+ * @brief MQTT 自定义终端实现
  * @author
  * @date 2026-02-04
  */
@@ -36,7 +36,7 @@ void MqttClient::start() {
   const QString broker = ConfigManager::instance().getMqttBroker();
   const quint16 port = ConfigManager::instance().getMqttPort();
 
-  // 设置客户端参数
+  // 设置自定义终端参数
   if (m_client) {
     m_client->setHostname(broker);
     m_client->setPort(port);

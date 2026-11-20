@@ -352,7 +352,7 @@ class MatchSimulationEngine:
             self._fired_events.add(key)
             if not self._features["events"]:
                 continue
-            # Event 2 会直接让客户端进入前哨站已摧毁状态。关闭血量模拟时不发送，
+            # Event 2 会直接让自定义终端进入前哨站已摧毁状态。关闭血量模拟时不发送，
             # 避免事件开关绕过独立的血量功能开关。
             if key == "outpost_destroyed" and not self._features["hp"]:
                 continue

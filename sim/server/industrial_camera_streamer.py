@@ -6,7 +6,7 @@
 
 @file industrial_camera_streamer.py
 @brief 模拟英雄机器人工业相机，将本地视频转码为 H.264 Annex-B 分片，
-        通过 MQTT CustomByteBlock topic 发送给客户端的 HeroVideoWidget。
+        通过 MQTT CustomByteBlock topic 发送给自定义终端的 HeroVideoWidget。
 @author Fudan EGA Team
 @date 2026-07-07
 @copyright Copyright (c) 2026 Fudan University EGA Team (复旦大学星云 EGA 机器人战队).
@@ -18,11 +18,11 @@
     - 支持手动开始/停止推流 (与图传控制独立)
     - 复用 resources/videos 目录的视频文件
 
-客户端协议 (与 NetworkManager/VideoReceiver::feedH264Frame 对齐):
+自定义终端协议 (与 NetworkManager/VideoReceiver::feedH264Frame 对齐):
     每个 CustomByteBlock.data = [H264 分片字节] + [1 字节 packetId]
     - 末字节 packetId 用于丢包检测 (feedH264Frame: data.back())
     - 前面所有字节为 H264 Annex-B 码流片段 (任意大小均可，H264Decoder 内部累积重组)
-    - 无需 303B wrapper (客户端仅在 data.size()==303 且带 0x0a 0xac 0x02 前缀时才剥头，
+    - 无需 303B wrapper (自定义终端仅在 data.size()==303 且带 0x0a 0xac 0x02 前缀时才剥头，
       其它大小原样处理)
     - H264 码流须含 SPS/PPS/IDR (h264_mp4toannexb 保证)，解码器 reset 后等到 IDR 才出图
 """
@@ -49,7 +49,7 @@ class IndustrialCameraStreamer:
     # 默认按协议习惯使用 300B 分片；如需临时调试可通过构造参数覆盖。
     FRAGMENT_SIZE = 300
 
-    # H.264 编码器候选 (按优先级)。客户端 H264Decoder 严格要求真 IDR (NAL type 5)，
+    # H.264 编码器候选 (按优先级)。自定义终端 H264Decoder 严格要求真 IDR (NAL type 5)，
     # 某些 libx264 构建版本（如部分 Homebrew 版本）默认启用 open-gop，只产生非 IDR 的 I 帧，
     # 因此把 h264_videotoolbox (macOS) 也列入候选，启动时探测选第一个能产 IDR 的。
     # 每项格式：(编码器名称, 额外 FFmpeg 参数)
@@ -307,7 +307,7 @@ class IndustrialCameraStreamer:
 
         encoder, extra_args = self._chosen_encoder
         # 小分辨率/低码率，控制 MQTT 分片频率 (~200 片/秒)。
-        # -g 15 强制 0.5s 一个 IDR，便于客户端 reset 后快速恢复。
+        # -g 15 强制 0.5s 一个 IDR，便于自定义终端 reset 后快速恢复。
         cmd = [
             "ffmpeg",
             "-re",                       # 按原始帧率读取
@@ -422,7 +422,7 @@ class IndustrialCameraStreamer:
 
     def _build_custom_byte_payload(self, h264_chunk: bytes) -> bytes:
         """
-        将 H.264 裸片段反向封装成客户端解码链期望的 CustomByteBlock.data。
+        将 H.264 裸片段反向封装成自定义终端解码链期望的 CustomByteBlock.data。
 
         格式:
             [H.264 Annex-B 分片字节] + [1 字节 packetId]
@@ -433,7 +433,7 @@ class IndustrialCameraStreamer:
         """
         发送一个分片: [h264_chunk] + [packetId 字节]
 
-        客户端 feedH264Frame 取 data.back() 当 packetId，data.left(size-1) 交 H264Decoder。
+        自定义终端 feedH264Frame 取 data.back() 当 packetId，data.left(size-1) 交 H264Decoder。
         """
         data = self._build_custom_byte_payload(h264_chunk)
         if self.mqtt_publisher:

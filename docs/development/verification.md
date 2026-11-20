@@ -39,7 +39,7 @@ python3 tools/release/check_public_readiness.py
 
 ## 验证范围
 
-Quality 工作流在 Ubuntu 24.04 上执行仓库检查、QML 检查、客户端构建、CTest、发布工具测试和
+Quality 工作流在 Ubuntu 24.04 上执行仓库检查、QML 检查、自定义终端构建、CTest、发布工具测试和
 模拟器测试。工作流的实际结果可在仓库 Actions 页面查看；本地运行同一命令时，应同时记录操作
 系统、编译器、Qt、CMake 和其他关键依赖版本。
 

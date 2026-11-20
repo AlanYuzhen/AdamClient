@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 /**
  * @file MqttManager.h
- * @brief MQTT 客户端管理器
- * @details 封装 Eclipse Paho MQTT C 客户端，实现与裁判系统服务器的 MQTT 通信。
+ * @brief MQTT 自定义终端管理器
+ * @details 封装 Eclipse Paho MQTT C 自定义终端，实现与裁判系统服务器的 MQTT 通信。
  *          按照官方《RoboMaster 2027 University Series Communication Protocol V1.0.0》
  *          的自定义终端 Topic 与 MQTT 传输规范。
  * @author Clear
@@ -41,8 +41,8 @@ typedef int MQTTClient_deliveryToken;
 
 /**
  * @class MqttManager
- * @brief MQTT 客户端管理器
- * @details 实现 MQTT 发布/订阅通信，用于自定义客户端协议。
+ * @brief MQTT 自定义终端管理器
+ * @details 实现 MQTT 发布/订阅通信，用于自定义终端协议。
  *          - 订阅：GameStatus、GlobalUnitStatus、RobotDynamicStatus 等
  *          - 发布：CommonCommand、MapClickCmd、CustomControl 等
  */
@@ -66,7 +66,7 @@ public:
    * @details TCP 连接在后台线程执行，连接结果通过 connectCompleted 信号通知。
    *          调用线程不会被阻塞，避免了 UI 卡顿。
    * @param serverUri 服务器地址，格式 "tcp://ip:port"
-   * @param clientId 客户端 ID
+   * @param clientId 自定义终端 ID
    */
   void connectToBrokerAsync(const QString &serverUri, const QString &clientId);
 
@@ -116,7 +116,7 @@ signals:
 
   /**
    * @brief 接收到 MQTT 消息时的本地观测信号
-   * @details 该信号只表达“客户端本机在回调中观察到消息”的时间点，
+   * @details 该信号只表达“自定义终端本机在回调中观察到消息”的时间点，
    *          不代表赛事引擎真实 publish 时间。普通 topic 每条发出；高频
    *          CustomByteBlock 视频默认最多每秒采样一次，设置
    *          RM_VERBOSE_VIDEO_LOG=1 可恢复逐条观测。
@@ -148,12 +148,12 @@ signals:
   void connectingStarted();
 
 private:
-  // --- MQTT 客户端句柄 ---
-  MQTTClient m_client; // Paho MQTT 客户端句柄
+  // --- MQTT 自定义终端句柄 ---
+  MQTTClient m_client; // Paho MQTT 自定义终端句柄
 
   // --- 连接配置 ---
   QString m_serverUri;      // 服务器地址
-  QString m_clientId;       // 客户端 ID
+  QString m_clientId;       // 自定义终端 ID
   bool m_connected = false;  // 连接状态
   bool m_connecting = false; // 防重入：正在进行异步连接
 

@@ -1,6 +1,6 @@
 # 贡献指南
 
-感谢你愿意帮助改进 RM26 自定义客户端和配套模拟器。
+感谢你愿意帮助改进 RM26 自定义终端和配套模拟器。
 
 > 项目源代码采用 [MIT License](LICENSE)。提交贡献即表示你有权提供相关内容，并同意维护者按
 > 项目许可证发布；第三方代码、素材和标识仍需遵守各自的授权与署名要求。
@@ -23,7 +23,7 @@
 - `src/ui`、`src/qml`、`src/widgets`：界面容器、展示和交互。
 - `src/devhooks`：可选的开发观测接口，不承载业务逻辑。
 - `sim`：独立模拟器，用于无赛事引擎时的开发和测试。
-- `tests`、`tools/release`：测试和发布检查，不应成为正式客户端的隐性依赖。
+- `tests`、`tools/release`：测试和发布检查，不应成为正式自定义终端的隐性依赖。
 
 协议语义以 [`protocol_manifest.json`](src/network/proto/protocol_manifest.json) 声明的兼容目标为准。
 现场适配不得悄悄改变协议含义，差异应记录在文档和测试中。
@@ -61,7 +61,7 @@ node --test sim/tests/test_map_geometry.js
 
 - 文档应描述仓库中真实存在的行为，避免把计划写成已实现功能。
 - 示例配置必须使用占位地址，不得提交真实 IP、主机名、SSH 用户、密钥路径、账号或现场日志。
-- 不要提交官方 PDF、官方客户端截图、音效、字体、视频、队徽或其他来源不明素材。
+- 不要提交官方 PDF、官方自定义终端截图、音效、字体、视频、队徽或其他来源不明素材。
 - 新增素材时，请同时在 [ASSET_LICENSES.md](ASSET_LICENSES.md) 登记来源、作者、授权和修改情况。
 - 引入第三方代码或依赖时，请更新 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)，并保留上游许可证和版权声明。
 

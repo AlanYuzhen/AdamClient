@@ -1,7 +1,7 @@
-# RM26 客户端学习路径
+# RM26 自定义终端学习路径
 
-这份学习路径面向第一次接触 RM26 Custom Client 的开发者，可以在普通本地环境完成。你将先
-理解项目目标，再沿真实数据链路阅读客户端和模拟器，最后完成一次边界清晰、能够复核的贡献。
+这份学习路径面向第一次接触 RM26 Custom Terminal 的开发者，可以在普通本地环境完成。你将先
+理解项目目标，再沿真实数据链路阅读自定义终端和模拟器，最后完成一次边界清晰、能够复核的贡献。
 
 文中的命令默认从仓库根目录执行。除 CMake 构建目录外，这些命令不会连接或操作真实赛事
 环境。协议和现场能力的边界以当前代码、测试以及团队核验的官方资料版本为准。
@@ -11,7 +11,7 @@
 | 你的目标 | 建议阅读 |
 | --- | --- |
 | 先判断项目是否值得继续了解 | [10 分钟了解项目](#10-分钟了解项目) |
-| 想在没有硬件时理解整个系统 | [30 分钟理解模拟器与客户端边界](#30-分钟理解模拟器与客户端边界) |
+| 想在没有硬件时理解整个系统 | [30 分钟理解模拟器与自定义终端边界](#30-分钟理解模拟器与自定义终端边界) |
 | 准备修改协议、状态、界面或视频代码 | [按数据链路读代码](#按数据链路读代码) |
 | 想学习 Qt、网络、视频或测试方法 | [按专题深入](#按专题深入) |
 | 准备提交 Issue 或 Pull Request | [准备贡献](#准备贡献) |
@@ -22,7 +22,7 @@
 
 完成这一节后，你应该能回答三个问题：
 
-1. 客户端解决了哪些信息展示之外的操作问题；
+1. 自定义终端解决了哪些信息展示之外的操作问题；
 2. `src/`、`sim/`、`tools/` 分别承担什么职责；
 3. 仓库提供哪些验证证据，各项证据适用于哪些环境。
 
@@ -35,7 +35,7 @@
 5. 需要核对协议版本时，查看[官方资料索引](references/official-materials.md)和
    [协议目标清单](../src/network/proto/protocol_manifest.json)。
 
-先记住这条边界：`src/` 提供正式 Qt/C++ 客户端，`sim/` 作为独立协议对端，测试和发布工具
+先记住这条边界：`src/` 提供正式 Qt/C++ 自定义终端，`sim/` 作为独立协议对端，测试和发布工具
 用于离线验证。
 
 ### 可以复核的命令
@@ -51,15 +51,15 @@ python3 tools/release/check_runtime_resources.py
 python3 tools/release/check_sim_protobuf_runtime.py
 ```
 
-这一步不要求先启动客户端。两项检查用于核对资源清单和模拟器协议契约；真实赛事环境的联调
+这一步不要求先启动自定义终端。两项检查用于核对资源清单和模拟器协议契约；真实赛事环境的联调
 结果需另行记录。
 
-## 30 分钟理解模拟器与客户端边界
+## 30 分钟理解模拟器与自定义终端边界
 
 ### 学习目标
 
-完成这一节后，你应该能画出模拟器到客户端的 MQTT、UDP 和视频链路，并说明模拟器如何通过
-协议与客户端隔离，以及生产协议真相源如何保持唯一。
+完成这一节后，你应该能画出模拟器到自定义终端的 MQTT、UDP 和视频链路，并说明模拟器如何通过
+协议与自定义终端隔离，以及生产协议真相源如何保持唯一。
 
 ### 先看组件关系
 
@@ -76,8 +76,8 @@ python3 tools/release/check_sim_protobuf_runtime.py
 | MQTT 协议对端 | [`sim/server/mqtt_publisher.py`](../sim/server/mqtt_publisher.py) | 周期消息、事件消息和上行命令接收 |
 | UDP 发送 | [`sim/server/udp_sender.py`](../sim/server/udp_sender.py) | 兼容帧和目标地址 |
 | 视频输入 | [`sim/server/video_streamer.py`](../sim/server/video_streamer.py) | 文件或相机数据如何发送 |
-| 客户端组合入口 | [`src/ui/MainWindow.cpp`](../src/ui/MainWindow.cpp) | `GameData`、网络、视频和 QML 的组装 |
-| 客户端接入层 | [`src/network/NetworkManager.cpp`](../src/network/NetworkManager.cpp) | topic 路由、解析和上行命令 |
+| 自定义终端组合入口 | [`src/ui/MainWindow.cpp`](../src/ui/MainWindow.cpp) | `GameData`、网络、视频和 QML 的组装 |
+| 自定义终端接入层 | [`src/network/NetworkManager.cpp`](../src/network/NetworkManager.cpp) | topic 路由、解析和上行命令 |
 
 修改模拟器时，同时运行 Python、JavaScript 和协议兼容性检查，并把手工启动结果作为补充证据。
 
@@ -87,7 +87,7 @@ python3 tools/release/check_sim_protobuf_runtime.py
 # 查看模拟器入口实际装配了哪些组件
 git grep -n "StateManager\|MQTTPublisher\|UDPSender\|VideoStreamer" -- sim/server/main.py
 
-# 查看客户端组合根创建的领域、网络和视频对象
+# 查看自定义终端组合根创建的领域、网络和视频对象
 git grep -n "GameData\|NetworkManager\|VideoReceiver" -- src/ui/MainWindow.cpp
 
 # 确认模拟器生成代码与协议运行时仍兼容
@@ -103,7 +103,7 @@ python3 tools/release/check_sim_protobuf_runtime.py
 
 ### 链路一：比赛状态进入界面
 
-**学习目标：**理解一条 `GameStatus` 消息如何从模拟器或赛事端进入客户端，并最终触发 QML
+**学习目标：**理解一条 `GameStatus` 消息如何从模拟器或赛事端进入自定义终端，并最终触发 QML
 界面更新。
 
 按下面的顺序阅读：
@@ -179,7 +179,7 @@ ctest --preset release -R "TestVideoDatagramLogger" --output-on-failure
 
 先读[协议边界与真相源](architecture/protocol-boundary.md)，再查看
 [`protocol_manifest.json`](../src/network/proto/protocol_manifest.json)和
-[`robomaster.proto`](../src/network/proto/robomaster.proto)。客户端与模拟器共用该 schema，
+[`robomaster.proto`](../src/network/proto/robomaster.proto)。自定义终端与模拟器共用该 schema，
 生成方式、兼容修正和字段审计边界记录在
 [Protobuf 单一 Schema 维护说明](maintainers/protocol-convergence-plan.md)。
 

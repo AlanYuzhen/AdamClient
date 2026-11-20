@@ -140,7 +140,7 @@ START_VIDEO=false
 START_SERVER=true
 VIDEO_FILE="$PROJECT_ROOT/resources/videos/testdemo.mov"
 VIDEO_SENDER="$PROJECT_ROOT/tools/video_sender.py"
-# 默认只向本机发送，双机或现场联调必须显式指定客户端地址。
+# 默认只向本机发送，双机或现场联调必须显式指定自定义终端地址。
 TARGET_IP="${RM_SIM_TARGET_IP:-127.0.0.1}"
 MQTT_HOST="${RM_SIM_MQTT_HOST:-127.0.0.1}"
 MQTT_PORT="${RM_SIM_MQTT_PORT:-3333}"

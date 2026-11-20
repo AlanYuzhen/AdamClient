@@ -1,5 +1,5 @@
 name: 缺陷报告
-description: 报告可以稳定复现的客户端、模拟器或工具问题
+description: 报告可以稳定复现的自定义终端、模拟器或工具问题
 title: "[Bug] "
 body:
   - type: markdown
@@ -33,7 +33,7 @@ body:
     attributes:
       label: 影响范围
       options:
-        - 客户端界面或交互
+        - 自定义终端界面或交互
         - 核心状态或业务逻辑
         - MQTT、UDP 或协议处理
         - 视频接收或解码

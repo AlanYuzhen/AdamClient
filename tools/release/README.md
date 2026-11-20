@@ -141,7 +141,7 @@ python3 tools/release/check_version_contract.py
 
 ## 模拟器 Protobuf 单源检查
 
-`src/network/proto/robomaster.proto` 是客户端与模拟器唯一人工维护的 RoboMaster schema。协议
+`src/network/proto/robomaster.proto` 是自定义终端与模拟器唯一人工维护的 RoboMaster schema。协议
 变化后重新生成 Python 代码：
 
 ```bash

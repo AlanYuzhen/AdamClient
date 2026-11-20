@@ -1,6 +1,6 @@
-# RM26 客户端开发指南
+# RM26 自定义终端开发指南
 
-本文面向第一次参与 RM26 Custom Client 的外部开发者，介绍如何准备环境、构建客户端、
+本文面向第一次参与 RM26 Custom Terminal 的外部开发者，介绍如何准备环境、构建自定义终端、
 定位代码、完成验证并提交 Pull Request。项目使用 Qt 6、C++17 和 CMake；独立模拟器使用
 Python，可在没有赛事引擎和机器人硬件时提供开发数据。
 
@@ -19,15 +19,15 @@ Python，可在没有赛事引擎和机器人硬件时提供开发数据。
 | --- | --- | --- |
 | CMake | 3.21 或更高版本 | 使用仓库内的 CMake Presets |
 | C++ 编译器 | 支持 C++17 | AppleClang、Clang、GCC 或 MSVC |
-| Qt | Qt 6 | 客户端、QML 和 QtTest |
+| Qt | Qt 6 | 自定义终端、QML 和 QtTest |
 | Protobuf、Abseil | 必需 | 协议代码和基础依赖 |
 | Paho MQTT C | 可选 | 缺失时不启用 MQTT 功能 |
 | FFmpeg | 可选 | H.264/H.265 解码；可在配置时关闭 |
-| Python | 运行模拟器时需要 3.11 或更高版本 | 客户端构建本身不依赖 Python |
+| Python | 运行模拟器时需要 3.11 或更高版本 | 自定义终端构建本身不依赖 Python |
 
-客户端使用的 Qt 组件包括 Core、Concurrent、Widgets、Multimedia、Network、SerialPort、
+自定义终端使用的 Qt 组件包括 Core、Concurrent、Widgets、Multimedia、Network、SerialPort、
 Svg、Quick、QuickWidgets 和 QuickControls2；构建测试还需要 Qt Test、Qml 和 Quick。
-`devtools` Preset 额外需要 Qt HttpServer，普通客户端开发不必安装或启用它。
+`devtools` Preset 额外需要 Qt HttpServer，普通自定义终端开发不必安装或启用它。
 
 macOS 可以使用 Homebrew 安装主要依赖：
 
@@ -36,7 +36,7 @@ brew install cmake qt@6 protobuf abseil libpaho-mqtt ffmpeg
 ```
 
 Ubuntu 24.04 的依赖清单以
-[客户端 Dockerfile](../docker/client.Dockerfile)为参考。Windows 可以使用 Visual Studio
+[自定义终端 Dockerfile](../docker/client.Dockerfile)为参考。Windows 可以使用 Visual Studio
 或 Ninja 生成器，但应确保 CMake 找到同一套 Qt、Protobuf 和 Abseil，避免混用不同包管理器
 产生的二进制。
 
@@ -109,7 +109,7 @@ ctest --preset release
 项目名称为 `RM26CustomClient`；可执行目标在 1.x 期间继续使用兼容名 `RoboMasterClient2025`。
 重命名时需同步更新启动脚本、打包配置和兼容迁移说明。
 
-### 2.5 运行客户端
+### 2.5 运行自定义终端
 
 | 环境 | `dev` Preset 的常见路径 |
 | --- | --- |
@@ -125,7 +125,7 @@ ctest --preset release
 
 ## 3. 模块边界
 
-客户端当前的大部分生产代码会编入 `RoboMasterClientLib`。因此目录边界主要依靠代码审查
+自定义终端当前的大部分生产代码会编入 `RoboMasterClientLib`。因此目录边界主要依靠代码审查
 和测试维护，不能因为链接成功就认为依赖方向合理。
 
 ```mermaid
@@ -147,13 +147,13 @@ flowchart LR
 | `src/widgets` | 原生 Qt 控件和视频承载 | 传输连接管理 |
 | `src/qml` | 战术地图、状态面板和交互展示 | 原始协议解析、无类型网络调用 |
 | `src/devhooks` | 可选的开发观测接口 | 正式业务规则、默认控制入口 |
-| `sim` | 独立的 Python/Web 协议对端 | 生产客户端运行时依赖 |
+| `sim` | 独立的 Python/Web 协议对端 | 生产自定义终端运行时依赖 |
 | `tests` | QtTest 和基准测试 | 现场账号、不可复现数据 |
-| `tests`、`tools/release` | 测试和发布检查 | 客户端的第二套业务实现 |
+| `tests`、`tools/release` | 测试和发布检查 | 自定义终端的第二套业务实现 |
 
 详细说明见[系统架构概览](architecture/overview.md)。以下兼容实现需要特别注意：
 
-- `src/simulator/ProtocolSimulator.*` 是仍由客户端创建的进程内兼容实现，不等同于独立
+- `src/simulator/ProtocolSimulator.*` 是仍由自定义终端创建的进程内兼容实现，不等同于独立
   `sim/`。新增模拟能力优先放在 `sim/`，不要继续扩大两套模拟器的重叠职责。
 
 ## 4. 典型改动路径
@@ -179,7 +179,7 @@ flowchart LR
 | 修改配置项 | `src/config` | 默认值、校验、环境覆盖和文档 |
 | 修改 MQTT、UDP 或消息路由 | `src/network` | 生命周期、重连、线程退出、协议测试 |
 | 修改视频组帧或解码恢复 | `src/network`、`src/widgets` | 无 FFmpeg 构建、损坏数据和重连测试 |
-| 修改模拟比赛状态 | `sim/server` | 客户端消费端、协议检查、隔离冒烟 |
+| 修改模拟比赛状态 | `sim/server` | 自定义终端消费端、协议检查、隔离冒烟 |
 | 新增图片、字体、音视频 | `resources` | 资源引用、`ASSET_LICENSES.md`、再分发授权 |
 
 不要为了“整理目录”在同一个 PR 中同时改接口、业务行为和文件位置。先用测试固定行为，再做
@@ -266,20 +266,20 @@ python3 tools/release/check_public_readiness.py
 7. 更新[协议边界说明](architecture/protocol-boundary.md)或相关绑定文档。
 8. 增加 descriptor、golden payload 或行为测试，并运行完整协议检查与 CTest。
 
-客户端和模拟器的协议代码均由 canonical schema 生成。涉及公共消息时先阅读
+自定义终端和模拟器的协议代码均由 canonical schema 生成。涉及公共消息时先阅读
 [Protobuf 单一 Schema 维护说明](maintainers/protocol-convergence-plan.md)，不要手工修改生成的 pb2。
 
 ### 6.2 协议 PR 至少说明
 
 - 官方版本或勘误依据；
 - 修改前后的字段、方向和频率；
-- C++ 客户端与模拟器各自的兼容结果；
+- C++ 自定义终端与模拟器各自的兼容结果；
 - 旧消息、旧字段或旧配置的处理方式；
 - 实际运行过的测试，以及没有完成的双端或现场验证。
 
 ## 7. 使用模拟器联调
 
-独立模拟器位于 `sim/`，是客户端的协议对端，不是生产客户端依赖。完整参数见
+独立模拟器位于 `sim/`，是自定义终端的协议对端，不是生产自定义终端依赖。完整参数见
 [模拟器说明](../sim/README.md)。
 
 ### 7.1 安装与启动
@@ -297,14 +297,14 @@ python -m pip install -e sim
 Windows PowerShell 的虚拟环境命令以及视频参数见模拟器说明。默认 Web 控制台地址为
 `http://127.0.0.1:8000`。
 
-模拟器需要 Mosquitto 或兼容的 MQTT Broker。客户端与模拟器必须使用相同的 Broker 地址、
+模拟器需要 Mosquitto 或兼容的 MQTT Broker。自定义终端与模拟器必须使用相同的 Broker 地址、
 端口和机器人 ID。基本联调建议按以下顺序进行：
 
 1. 使用独立本地 Broker，先以 `--no-video` 启动模拟器。
 2. 打开 Web 控制台，确认状态变化能够发布。
-3. 启动 `dev` 构建的客户端，确认连接、状态投影和退出流程。
+3. 启动 `dev` 构建的自定义终端，确认连接、状态投影和退出流程。
 4. 再分别启用 UDP 或视频，避免一次引入多个变量。
-5. 记录客户端日志、模拟器日志和具体配置，不记录真实现场凭据。
+5. 记录自定义终端日志、模拟器日志和具体配置，不记录真实现场凭据。
 
 模拟器测试包括 Python 赛事推进用例和 JavaScript 地图几何用例，命令见
 [验证说明](development/verification.md)。修改模拟器时还应完成协议检查，以及启动、状态发布和
@@ -319,7 +319,7 @@ Windows PowerShell 的虚拟环境命令以及视频参数见模拟器说明。�
 - 赛事命令、按键注入和其他真实动作必须默认拒绝，并由操作者在确认环境后显式授权。
 - `devtools` 和 `src/devhooks` 只用于可选观测，不能成为绕过业务授权的控制通道。
 - 现场地址、SSH 配置、账号、密钥、抓包和运行日志不得进入提交。
-- 真实链路问题不能只看客户端一端；有授权的联调应同时保留发送端与接收端证据，并写明
+- 真实链路问题不能只看自定义终端一端；有授权的联调应同时保留发送端与接收端证据，并写明
   时钟同步和采集限制。
 - 安全问题不要提交公开 issue，按[安全策略](../SECURITY.md)私下报告。
 
@@ -373,9 +373,9 @@ cmake --build --preset dev
 ctest --preset dev -N
 ```
 
-### 模拟器启动了，但客户端没有数据
+### 模拟器启动了，但自定义终端没有数据
 
-依次核对 Broker 地址与端口、机器人 ID、UDP 目标地址、端口占用和客户端 `config.json`。
+依次核对 Broker 地址与端口、机器人 ID、UDP 目标地址、端口占用和自定义终端 `config.json`。
 先关闭视频和额外发送器，只保留一个状态通道定位问题。
 
 ### 资源校验失败

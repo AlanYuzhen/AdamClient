@@ -198,7 +198,7 @@ print_usage() {
 选项:
   --build              增量重建 Docker 镜像（源码变更后使用，复用 CMake/Ninja 缓存）
   --reuse, --no-build  直接启动现有容器/镜像，不重新构建 client（默认行为）
-  --field-client       现场客户端模式：只启动客户端，使用 Linux host network 接收赛事引擎 MQTT/UDP 图传
+  --field-client       现场自定义终端模式：只启动自定义终端，使用 Linux host network 接收赛事引擎 MQTT/UDP 图传
   -h, --help           显示帮助
 EOF
 }
@@ -372,9 +372,9 @@ main() {
     else
         log_info "复用模式: 跳过镜像构建，直接使用已有镜像启动"
     fi
-    log_info "客户端 -> 服务端 UDP: ${RM_SERVER_IP:-rm26-sim}:${RM_SERVER_PORT:-3333}"
-    log_info "客户端 -> MQTT: ${RM_MQTT_BROKER:-rm26-mqtt}:${RM_MQTT_PORT:-3333}"
-    log_info "客户端 MQTT ClientID: ${RM_CLIENT_ROBOT_ID:-<config.json>}"
+    log_info "自定义终端 -> 服务端 UDP: ${RM_SERVER_IP:-rm26-sim}:${RM_SERVER_PORT:-3333}"
+    log_info "自定义终端 -> MQTT: ${RM_MQTT_BROKER:-rm26-mqtt}:${RM_MQTT_PORT:-3333}"
+    log_info "自定义终端 MQTT ClientID: ${RM_CLIENT_ROBOT_ID:-<config.json>}"
     if [ "$STACK_MODE" = "full" ] && compose_has_service "rm26-sim"; then
         log_info "Web 控制台: http://localhost:${RM_SIM_WEB_PORT:-8000}"
     fi

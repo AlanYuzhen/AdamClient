@@ -4,9 +4,9 @@
 
 /**
  * @file MainWindow.h
- * @brief RoboMaster 2026 自定义客户端主界面定义
+ * @brief RoboMaster 2026 自定义终端主界面定义
  * @details
- * 定义了客户端的主窗口类，包括UI布局初始化、事件处理、面板管理和核心业务逻辑的集成。
+ * 定义了自定义终端的主窗口类，包括UI布局初始化、事件处理、面板管理和核心业务逻辑的集成。
  * @author Clear
  * @date 2025-11-16
  * @copyright Copyright (c) 2025 Fudan University EGA Team (复旦大学星云 EGA 机器人战队).
@@ -68,7 +68,7 @@ class DebugLogWidget;
 class AROverlayManager;
 class AROverlayWidget;
 class HeroVideoWidget;
-class MqttClient; // MQTT 客户端前向声明
+class MqttClient; // MQTT 自定义终端前向声明
 class ClientDevHooks; // 开发钩子前向声明
 class S1ProtocolManager;   // S1 协议管理器前向声明
 
@@ -77,7 +77,7 @@ class KillFeedWidget;
 /**
  * @brief RoboMaster 2026 主界面类
  * @details
- * 基于官方客户端和2026界面规范重新设计，负责管理所有子界面和核心交互逻辑。
+ * 基于官方自定义终端和2026界面规范重新设计，负责管理所有子界面和核心交互逻辑。
  */
 class MainWindow : public QMainWindow {
   Q_OBJECT
@@ -280,10 +280,8 @@ private:
   // --- 辅助方法 ---
   void updateUI();                // 更新所有UI组件 (已弃用，保留兼容)
   void updateCurrentRobotPanel(); // 更新当前选中机器人的详细面板
-  bool shouldShowDeployModePanel() const; // 仅英雄且非 H 面板打开时显示部署模式
   void updateExchangePanelGeometry(); // 更新 H 兑换面板的位置与尺寸
   int exchangePanelVisualTop() const; // 获取兑换面板可视顶部（用于提示文字定位）
-  void updateDeployModePanelGeometry(); // 更新 K/L 部署提示面板位置
   void updateOfficialEventPopupGeometry(); // 更新官方事件弹窗位置
   void updateTacticalTimedEventPopupGeometry(); // 更新战术定时事件弹窗位置
   void updateTacticalTimedEventPopupState(); // 同步战术定时事件弹窗显示状态
@@ -296,14 +294,10 @@ private:
   QWidget *topInteractivePanel() const; // 当前最应该保持可交互的浮层
   bool shouldCaptureSettingsPanelShortcut(QKeyEvent *event) const;
   bool tryHandleSettingsPanelShortcut(QKeyEvent *event);
-  bool tryHandleEngineerExitShortcut(); // 统一处理 engineer 的 L 退出逻辑
-  bool tryHandleEngineerConfirmShortcut(QKeyEvent *event);
   void refreshHeroVideoStream();
   void checkDartHitViewSwitch(); // 检查飞镖命中视图切回时机（基于协议时间）
 
 
-  bool tryHandleAerialAirSupportInterruptShortcut(); // 空中机器人 N 键中断空中支援
-  bool tryHandleAerialAirSupportShortcut(int action); // 空中机器人 Ctrl+1/2 空中支援
   void updateRunePanelVisibility(); // 根据比赛阶段与机器人类型同步能量机关面板可见性
   bool tryHandleRuneHoldShortcut(); // 步兵长按 F 显示并触发大能量机关交互
   bool tryHandleSiloOpenShortcut(QKeyEvent *event); // F 上报后同步进入飞镖二次确认
@@ -344,7 +338,7 @@ private:
   int getAdaptiveSize(int baseSize);
   double getPanelScaleFactor() const;        //获取比例
   QSize getScaledPanelSize(int baseWidth, int baseHeight) const;    //获取面板比例缩放后的大小
-  void applyPanelResolutionScaling();          //将面板大小应用到客户端中
+  void applyPanelResolutionScaling();          //将面板大小应用到自定义终端中
   QSize popupResolutionViewport() const;
   void updatePopupResolutionScaling();
 
@@ -473,7 +467,6 @@ private:
   QQuickWidget *m_qmlExchangePanel = nullptr;  // [H] 兑换商店面板
   QQuickWidget *m_qmlAmmoSupply17Panel = nullptr;  // [O] 买17mm弹面板
   QQuickWidget *m_qmlAmmoSupply42Panel = nullptr;  // [I] 买42mm弹面板
-  QQuickWidget *m_qmlDeployModePanel = nullptr; // K/L 部署提示面板
   QQuickWidget *m_qmlSiloPanel = nullptr; // 飞镖操控面板 (QML)
   QQuickWidget *m_qmlGunnerOverlay = nullptr; // 云台手副屏自定义数据叠加层 (QML)
   QQuickWidget *m_qmlTacticalPage = nullptr;   // 战术指挥屏 (QML)
@@ -532,7 +525,7 @@ private:
   GameData *m_gameData = nullptr;             // 比赛数据模型单例
   NetworkManager *m_networkManager = nullptr; // 网络通信管理器
   RM::TacticalAnalyzer *m_tacticalAnalyzer = nullptr; // 战术分析引擎
-  MqttClient *m_mqttClient = nullptr;          // MQTT 客户端（可选，取决于是否找到 Qt6::Mqtt）
+  MqttClient *m_mqttClient = nullptr;          // MQTT 自定义终端（可选，取决于是否找到 Qt6::Mqtt）
   QMediaPlayer *m_bgmPlayer = nullptr;        // 背景音乐播放器
   QAudioOutput *m_audioOutput = nullptr;      // 音频输出控制器
   QMediaPlayer *m_secondaryPlayer = nullptr;   // 并列音效播放器

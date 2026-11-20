@@ -3,7 +3,7 @@
  * @file PrepPhasePopup.qml
  * @brief 准备阶段/自检阶段弹窗
  * @details 显示倒计时和阶段说明，提醒设置机器人性能
- *          参考官方客户端设计，包含警告提示框
+ *          参考官方自定义终端设计，包含警告提示框
  * @author Clear
  * @date 2026-01-31
  * @copyright Copyright (c) 2026 Fudan University EGA Team (复旦大学星云 EGA 机器人战队).

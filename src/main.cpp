@@ -243,7 +243,7 @@ int main(int argc, char *argv[]) {
   QApplication app(argc, argv);
 
   // 设置应用程序元数据，用于QSettings等组件的默认路径
-  app.setApplicationName("复旦大学 EGA战队客户端");
+  app.setApplicationName("复旦大学 EGA 自定义终端");
   app.setApplicationVersion("1.0.0");
   app.setOrganizationName("复旦大学 EGA战队");
   app.setWindowIcon(QIcon(":/images/app_icon.png"));

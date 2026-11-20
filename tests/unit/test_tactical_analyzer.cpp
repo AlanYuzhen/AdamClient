@@ -16,8 +16,8 @@ private slots:
         robomaster::GlobalUnitStatus status;
         status.set_total_cp_ally(120);
         status.set_total_cp_enemy(80);
-        status.set_outpost_status(1);
-        status.set_enemy_outpost_status(3);
+        status.set_outpost_r_status(1);
+        status.set_outpost_b_status(3);
         for (int hp : {110, 130, 140, 170, 210, 230, 240, 270}) status.add_robot_health(hp);
         gameData.updateGlobalUnitStatus(status);
         QCOMPARE(gameData.command2027State().value("blueControlPoints").toInt(), 120);

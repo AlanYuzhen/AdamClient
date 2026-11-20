@@ -247,7 +247,7 @@ FORBIDDEN_PATH_RULES = (
     ForbiddenPathRule(
         "path:agent-metadata",
         "包含智能开发工具或代理元数据",
-        "从公开树移除代理配置、技能和会话目录；这些内容不属于客户端或模拟器交付物。",
+        "从公开树移除代理配置、技能和会话目录；这些内容不属于自定义终端或模拟器交付物。",
         lambda path: any(
             path == root or path.startswith(f"{root}/")
             for root in (

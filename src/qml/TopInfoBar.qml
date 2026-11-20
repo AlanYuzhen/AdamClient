@@ -1,7 +1,7 @@
 /**
  * @file TopInfoBar.qml
  * @brief 顶部信息栏组件
- * @details 主界面顶部栏按官方客户端结构对齐，禁止默认展示 mock UI。
+ * @details 主界面顶部栏按官方自定义终端结构对齐，禁止默认展示 mock UI。
  */
 
 import QtQuick 2.15

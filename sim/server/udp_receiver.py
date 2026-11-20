@@ -70,7 +70,7 @@ class UDPReceiver:
             # <BB 依次为指令类型和目标 ID
             cmd_type, target_id = struct.unpack(protocol.ROBOT_CONTROL_FMT, payload)
             print(f"Received Robot Control: Type={cmd_type}, ID={target_id}")
-            # 控制指令的状态更新仍由客户端处理，模拟器在这里保留接收日志。
+            # 控制指令的状态更新仍由自定义终端处理，模拟器在这里保留接收日志。
             self.state_manager.log("UDP", f"Robot Control: Type={cmd_type}, ID={target_id}")
 
         elif cmd_id == protocol.CmdID.MAP_INTERACTION:

@@ -42,7 +42,7 @@ private slots:
     // 验证默认机器人数量
     QCOMPARE(gameData.getAllRobots().size(),
              12); // 每方初始化 6 台可见机器人（1、2、3、4、6、7）；
-                  // 当前客户端界面不显示 5/105。
+                  // 当前自定义终端界面不显示 5/105。
     QVERIFY(gameData.getRobotById(5) == nullptr);
     QVERIFY(gameData.getRobotById(105) == nullptr);
 
