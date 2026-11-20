@@ -225,7 +225,7 @@ Rectangle {
     Text {
         anchors.left: parent.left; anchors.leftMargin: 6 * root.visualScale
         anchors.top: parent.top; anchors.topMargin: 4 * root.visualScale
-        text: "2027 战术地图 · 1 重型工程 / 3、4 步兵 / 6 无人机 / 7 哨兵"; color: "#8899AA"; font.pixelSize: 10 * root.visualScale; font.bold: true
+        text: "2027 战术地图 · 1 重型工程 / 3、4 步兵 / 7 哨兵"; color: "#8899AA"; font.pixelSize: 10 * root.visualScale; font.bold: true
     }
 
     // 雷达数据更新时间

@@ -157,17 +157,6 @@ Item {
         }
 
         Text {
-            visible: root.isLaserTargetedMode
-            Layout.fillWidth: true
-            text: "我方无人机被照射"
-            color: "#F2555A"
-            font.pixelSize: 22
-            font.bold: true
-            horizontalAlignment: Text.AlignHCenter
-            verticalAlignment: Text.AlignVCenter
-        }
-
-        Text {
             visible: !root.isDartMode && !root.isLaserTargetedMode
             Layout.fillWidth: true
             text: "平均环数/灯臂数 " + root.averageRings.toFixed(1) + " / " + root.activatedArms + "，获" + root.attackBuff.maxTime + "秒的"

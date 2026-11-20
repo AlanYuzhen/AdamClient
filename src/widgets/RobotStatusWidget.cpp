@@ -504,9 +504,6 @@ void RobotStatusWidget::drawRobotIcon(QPainter &painter) {
   case Engineer:
     typeText = "工程";
     break;
-  case Drone:
-    typeText = "无人机";
-    break;
   case Sentry:
     typeText = "哨兵";
     break;
