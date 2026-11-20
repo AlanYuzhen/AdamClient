@@ -28,10 +28,9 @@ private slots:
     QVERIFY2(panel, qPrintable(component.errorString()));
 
     const QStringList robotTypes{
-        QStringLiteral("R1 - Hero"),     QStringLiteral("R2 - Engineer"),
-        QStringLiteral("R3 - Standard"), QStringLiteral("R4 - Standard"),
-        QStringLiteral("R7 - Sentry"),   QStringLiteral("B1 - Hero"),
-        QStringLiteral("B2 - Engineer"), QStringLiteral("B3 - Standard"),
+        QStringLiteral("R1 - Hero"),     QStringLiteral("R3 - Standard"),
+        QStringLiteral("R4 - Standard"), QStringLiteral("R7 - Sentry"),
+        QStringLiteral("B1 - Hero"),     QStringLiteral("B3 - Standard"),
         QStringLiteral("B4 - Standard"), QStringLiteral("B7 - Sentry"),
     };
 

@@ -72,27 +72,26 @@ int settingsRobotIdForShortcut(const QKeyEvent *event) {
     return 0;
   }
 
+  // 2027 阵容：1 重装、3/4 步兵、7 哨兵；2 号为保留位，不再提供快捷键。
   switch (event->key()) {
   case Qt::Key_1:
     return 1;
   case Qt::Key_2:
-    return 2;
-  case Qt::Key_3:
     return 3;
-  case Qt::Key_4:
+  case Qt::Key_3:
     return 4;
-  case Qt::Key_5:
+  case Qt::Key_4:
     return 7;
-  case Qt::Key_6:
+  case Qt::Key_5:
     return 101;
-  case Qt::Key_7:
-    return 102;
-  case Qt::Key_8:
+  case Qt::Key_6:
     return 103;
-  case Qt::Key_9:
+  case Qt::Key_7:
     return 104;
-  case Qt::Key_0:
+  case Qt::Key_8:
     return 107;
+  case Qt::Key_9:
+  case Qt::Key_0:
   default:
     return 0;
   }

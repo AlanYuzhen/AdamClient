@@ -351,10 +351,6 @@ Item {
                         avatarSource: "qrc:/images/top_robots/red_teammate_avatar_soldier.png"
                     }
                     RobotStatusItem {
-                        robotId: 2
-                        avatarSource: "qrc:/images/top_robots/red_teammate_avatar_engineer.png"
-                    }
-                    RobotStatusItem {
                         robotId: 1
                         avatarSource: "qrc:/images/top_robots/red_teammate_avatar_hero.png"
                     }
@@ -622,11 +618,6 @@ Item {
                     RobotStatusItem {
                         robotId: 101
                         avatarSource: "qrc:/images/top_robots/blue_teammate_avatar_hero.png"
-                        isBlue: true
-                    }
-                    RobotStatusItem {
-                        robotId: 102
-                        avatarSource: "qrc:/images/top_robots/blue_teammate_avatar_engineer.png"
                         isBlue: true
                     }
                     RobotStatusItem {
