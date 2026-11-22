@@ -72,10 +72,6 @@ HelpOverlayWidget::HelpOverlayWidget(QWidget *parent) : QWidget(parent) {
                                  QStringLiteral("打开大地图，配合 A / B / I 进行战术标记"),
                                  m_panel),
                   2, 0);
-  grid->addWidget(createHelpItem(QStringLiteral("H"),
-                                 QStringLiteral("打开兑换或支援面板，执行远程兑换与相关操作"),
-                                 m_panel),
-                  2, 1);
 
   mainLayout->addLayout(grid);
 }
