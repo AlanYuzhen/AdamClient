@@ -165,6 +165,18 @@ Rectangle {
             level:7
         },
         {
+            number: 4,
+            name: "步兵",
+            icon: "qrc:/images/robots/red_infantry.png",
+            currentHP: 46,
+            maxHP: 200,
+            chassisPower: 45,
+            heatLimit: 50,
+            heatCooling: 40,
+            shootSpeedLimit: 25,
+            level:7
+        },
+        {
             number: 7,
             name: "哨兵",
             icon: "qrc:/images/robots/red_sentry.png",
