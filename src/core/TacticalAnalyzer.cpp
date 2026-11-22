@@ -61,12 +61,12 @@ RobotType tacticalDefaultTypeForSlot(int slot) {
 }
 
 QString tacticalRobotTypeLabel(RobotType type, int slot) {
-    if (slot == 1) return QStringLiteral("重型工程");
+    if (slot == 1) return QStringLiteral("重装");
     switch (type) {
     case RobotType::HERO:
-        return QStringLiteral("英雄");
+        return QStringLiteral("重装");
     case RobotType::ENGINEER:
-        return QStringLiteral("工程");
+        return QStringLiteral("重装");
     case RobotType::AERIAL:
         return QStringLiteral("空中系统");
     case RobotType::SENTRY:
@@ -292,7 +292,7 @@ void TacticalAnalyzer::loadMockData() {
     {
         KeyEventItem ev;
         ev.time = "3:15"; ev.icon = "⚠";
-        ev.text = "敌方重型工程狙击伤害 450"; ev.color = "#d52424"; ev.priority = "P2";
+        ev.text = "敌方重装狙击伤害 450"; ev.color = "#d52424"; ev.priority = "P2";
         events.append(toVariantMap(ev));
     }
     m_snapshot.keyEvents = events;
@@ -335,7 +335,7 @@ void TacticalAnalyzer::loadMockData() {
     }
     {
         TargetRankItem t;
-        t.rank = 4; t.id = "E1"; t.label = "敌重型工程1";
+        t.rank = 4; t.id = "E1"; t.label = "敌重装1";
         t.hp = 680; t.maxHp = 800; t.threat = 0.45; t.icon = "hero";
         targets.append(toVariantMap(t));
     }

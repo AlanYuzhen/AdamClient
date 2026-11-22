@@ -87,6 +87,28 @@ private slots:
     QCOMPARE(robot->currentHeat, 50);
   }
 
+  /**
+   * @brief 2027 阵容的机器人统计列表只包含 1/3/4/7，且 1 号显示为重装
+   */
+  void testRobotTabListUses2027Roster() {
+    GameData gameData;
+    const QVariantList red = gameData.getRedRobotsDataQml();
+    const QVariantList blue = gameData.getBlueRobotsDataQml();
+
+    QCOMPARE(red.size(), 4);
+    QCOMPARE(blue.size(), 4);
+    QCOMPARE(red.at(0).toMap().value("number").toInt(), 1);
+    QCOMPARE(red.at(0).toMap().value("name").toString(),
+             QStringLiteral("重装"));
+
+    const QList<int> expected{1, 3, 4, 7};
+    for (int i = 0; i < red.size(); ++i) {
+      QCOMPARE(red.at(i).toMap().value("number").toInt(), expected.at(i));
+      QCOMPARE(blue.at(i).toMap().value("number").toInt(),
+               expected.at(i) + 100);
+    }
+  }
+
   void testOptionalRobotDynamicFieldsPreservePriorValues() {
     GameData gameData;
     gameData.setCurrentRobotId(1);

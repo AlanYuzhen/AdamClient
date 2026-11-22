@@ -1385,17 +1385,19 @@ QVariantList GameData::getRedRobotsDataQml() const {
 
   auto typeName = [](RobotType t) -> QString {
     switch (t) {
-    case RobotType::HERO: return "英雄";
-    case RobotType::ENGINEER: return "工程";
+    case RobotType::HERO: return "重装";
+    case RobotType::ENGINEER: return "重装";
     case RobotType::INFANTRY_3:
     case RobotType::INFANTRY_4: return "步兵";
-    case RobotType::AERIAL: return "空中系统";
+    case RobotType::AERIAL: return "重装";
     case RobotType::SENTRY: return "哨兵";
     default: return "机器人";
     }
   };
   for (const auto &robot : m_robots) {
     if (robot.team != TeamColor::RED) continue;
+    // 2027 阵容只显示 1/3/4/7；2 号为保留位，6 号为空中系统。
+    if (robot.robotId % 100 == 2 || robot.robotId % 100 == 6) continue;
     const bool isConnected = robotConnectedForTab(robot);
     const bool useGlobalHp =
         robot.hasTabGlobalSnapshot && robot.tabGlobalCurrentHP > 0;
@@ -1441,17 +1443,19 @@ QVariantList GameData::getBlueRobotsDataQml() const {
 
   auto typeName = [](RobotType t) -> QString {
     switch (t) {
-    case RobotType::HERO: return "英雄";
-    case RobotType::ENGINEER: return "工程";
+    case RobotType::HERO: return "重装";
+    case RobotType::ENGINEER: return "重装";
     case RobotType::INFANTRY_3:
     case RobotType::INFANTRY_4:return "步兵";
-    case RobotType::AERIAL: return "空中系统";
+    case RobotType::AERIAL: return "重装";
     case RobotType::SENTRY: return "哨兵";
     default: return "机器人";
     }
   };
   for (const auto &robot : m_robots) {
     if (robot.team != TeamColor::BLUE) continue;
+    // 2027 阵容只显示 1/3/4/7；2 号为保留位，6 号为空中系统。
+    if (robot.robotId % 100 == 2 || robot.robotId % 100 == 6) continue;
     const bool isConnected = robotConnectedForTab(robot);
     const bool useGlobalHp =
         robot.hasTabGlobalSnapshot && robot.tabGlobalCurrentHP > 0;
@@ -4228,8 +4232,8 @@ void GameData::recordDamageEvent(const DamageEventData &data) {
 static QString getRobotName(int robotId) {
     int id = (robotId > 100) ? (robotId - 100) : robotId;
     switch (id) {
-        case 1: return "英雄";
-        case 2: return "工程";
+        case 1: return "重装";
+        case 2: return "重装";
         case 3: return "步兵3";
         case 4: return "步兵4";
         case 5: return "步兵5";

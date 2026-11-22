@@ -29,7 +29,7 @@ private slots:
         analyzer.analyze();
         const auto robots = analyzer.allyRobotList();
         QCOMPARE(robots.size(), 4);
-        QCOMPARE(robots[0].toMap().value("label").toString(), QStringLiteral("重型工程"));
+        QCOMPARE(robots[0].toMap().value("label").toString(), QStringLiteral("重装"));
         QCOMPARE(robots[1].toMap().value("hp").toInt(), 130);
         QCOMPARE(robots[3].toMap().value("hp").toInt(), 170);
         for (const auto &entry : robots) QVERIFY(entry.toMap().value("slot").toInt() != 2);
